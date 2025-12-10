@@ -36,9 +36,10 @@ function show(isShow) {
 
 $(document).ready(function () {
     show(0.0)
-    setTimeout("show(1.0)", 12000)
     //load the start
     demo.init();
+    // 移除 12 秒延遲，改為模型載入完成後顯示
+    show(1.0);
 });
 
 function start() {

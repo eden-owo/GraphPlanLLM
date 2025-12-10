@@ -142,7 +142,7 @@
     advance: function advance(time, deltaTime) {
       while (this._idleSpringIndices.length > 0) {
         this._idleSpringIndices.pop();
-      }for (var i = 0, len = this._activeSprings.length; i < len; i++) {
+      } for (var i = 0, len = this._activeSprings.length; i < len; i++) {
         var spring = this._activeSprings[i];
         if (spring.systemShouldAdvance()) {
           spring.advance(time / 1000.0, deltaTime / 1000.0);
@@ -178,7 +178,7 @@
       this._lastTimeMillis = currentTimeMillis;
 
       var i = 0,
-          len = this.listeners.length;
+        len = this.listeners.length;
       for (i = 0; i < len; i++) {
         listener = this.listeners[i];
         listener.onBeforeIntegrate && listener.onBeforeIntegrate(this);
@@ -495,21 +495,21 @@
       this._timeAccumulator += adjustedDeltaTime;
 
       var tension = this._springConfig.tension,
-          friction = this._springConfig.friction,
-          position = this._currentState.position,
-          velocity = this._currentState.velocity,
-          tempPosition = this._tempState.position,
-          tempVelocity = this._tempState.velocity,
-          aVelocity,
-          aAcceleration,
-          bVelocity,
-          bAcceleration,
-          cVelocity,
-          cAcceleration,
-          dVelocity,
-          dAcceleration,
-          dxdt,
-          dvdt;
+        friction = this._springConfig.friction,
+        position = this._currentState.position,
+        velocity = this._currentState.velocity,
+        tempPosition = this._tempState.position,
+        tempVelocity = this._tempState.velocity,
+        aVelocity,
+        aAcceleration,
+        bVelocity,
+        bAcceleration,
+        cVelocity,
+        cAcceleration,
+        dVelocity,
+        dAcceleration,
+        dxdt,
+        dvdt;
 
       while (this._timeAccumulator >= Spring.SOLVER_TIMESTEP_SEC) {
 
@@ -668,7 +668,7 @@
   // **PhysicsState** consists of a position and velocity. A Spring uses
   // this internally to keep track of its current and prior position and
   // velocity values.
-  var PhysicsState = function PhysicsState() {};
+  var PhysicsState = function PhysicsState() { };
 
   util.extend(PhysicsState.prototype, {
     position: 0,
@@ -738,7 +738,7 @@
 
     // this.run is NOOP'd here to allow control from the outside using
     // this.step.
-    this.run = function () {};
+    this.run = function () { };
 
     // Perform one step toward resolving the SpringSystem.
     this.step = function (timestep) {
@@ -1228,13 +1228,13 @@ var Spinner = function () {
     _classCallCheck(this, Spinner);
 
     var id = params.id,
-        radius = params.radius,
-        sides = params.sides,
-        depth = params.depth,
-        colors = params.colors,
-        alwaysForward = params.alwaysForward,
-        restAt = params.restAt,
-        renderBase = params.renderBase;
+      radius = params.radius,
+      sides = params.sides,
+      depth = params.depth,
+      colors = params.colors,
+      alwaysForward = params.alwaysForward,
+      restAt = params.restAt,
+      renderBase = params.renderBase;
 
     if (sides < 3) {
       console.warn('At least 3 sides required.');
@@ -1328,11 +1328,11 @@ var Spinner = function () {
 
           // Input range in the `from` parameters.
           var fromLow = 0,
-              fromHigh = 1,
+            fromHigh = 1,
 
-          // Property animation range in the `to` parameters.
-          toLow = ctx._springRangeLow,
-              toHigh = ctx._springRangeHigh;
+            // Property animation range in the `to` parameters.
+            toLow = ctx._springRangeLow,
+            toHigh = ctx._springRangeHigh;
 
           val = rebound.MathUtil.mapValueInRange(val, fromLow, fromHigh, toLow, toHigh);
 
@@ -1531,12 +1531,8 @@ var demo = {
     demo.spinner.init(demo.spring, spinnerTypeAutoSpin);
 
     if (spinnerTypeAutoSpin) {
-      // Fake loading time, in a real world just call demo.spinner.setComplete();
-      // whenever the preload will be completed.
-      //change the load time
-      setTimeout(function () {
-        demo.spinner.setComplete();
-      }, 12000);
+      // 移除 12 秒延遲，立即完成 spinner 動畫
+      demo.spinner.setComplete();
     } else {
       // Perform real ajax request.
       demo.loadSomething();

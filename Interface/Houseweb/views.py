@@ -12,6 +12,7 @@ import numpy as np
 from model.decorate import *
 import math
 import pandas as pd
+import threading
 # import matlab.engine
 
 global test_data, test_data_topk, testNameList, trainNameList
@@ -28,11 +29,27 @@ def home(request):
 
 def Init(request):
     start = time.perf_counter()
-    getTestData()
-    getTrainData()
-    # loadMatlabEng()
+    
+    # 使用多線程並行載入資料，加快初始化速度
+    thread_test = threading.Thread(target=getTestData)
+    thread_train = threading.Thread(target=getTrainData)
+    thread_retrieval = threading.Thread(target=loadRetrieval)
+    
+    # 同時啟動三個載入線程
+    thread_test.start()
+    thread_train.start()
+    thread_retrieval.start()
+    
+    # 等待測試資料和訓練資料載入完成（loadModel 需要這些資料）
+    thread_test.join()
+    thread_train.join()
+    
+    # loadModel 依賴 train_data，必須等待完成後才能執行
     loadModel()
-    loadRetrieval()
+    
+    # 確保 retrieval 資料也載入完成
+    thread_retrieval.join()
+    
     end = time.perf_counter()
     print('Init(model+test+train+engine+retrieval) time: %s Seconds' % (end - start))
 
