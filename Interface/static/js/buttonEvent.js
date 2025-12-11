@@ -18,21 +18,20 @@ $(document).ready(function () {
 });
 
 function show(isShow) {
-    // document.getElementById("rmlist").style.opacity = isShow;
-    // document.getElementById("gooey-API").style.opacity = isShow;
-    document.getElementById("leftbox").style.opacity = isShow;
-    document.getElementById("rightbox").style.opacity = isShow;
-    document.getElementById("listbox").style.opacity = isShow;
-    document.getElementById("graphSearch").style.opacity = isShow;
-    document.getElementById("Editing").style.opacity = isShow;
-
-    document.getElementById("BedRoomVue").style.opacity = isShow;
-    document.getElementById("BathRoomVue").style.opacity = isShow;
-    document.getElementById("otherVue").style.opacity = isShow;
-    document.getElementById("detailVue").style.opacity = isShow;
-    document.getElementById("addVue").style.opacity = isShow;
-
+    // 新佈局使用 app-container，設置透明度
+    var elements = [
+        "leftbox", "rightbox", "listbox", "graphSearch", "Editing",
+        "BedRoomVue", "BathRoomVue", "otherVue", "detailVue", "addVue"
+    ];
+    elements.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.style.opacity = isShow;
+    });
+    // 新佈局的主容器
+    var appContainer = document.querySelector('.app-container');
+    if (appContainer) appContainer.style.opacity = isShow;
 }
+
 
 $(document).ready(function () {
     show(0.0)
@@ -102,11 +101,12 @@ function start() {
         console.timeEnd('time')
 
     })
-    animateHeight(true);
-    animateHeight1(true);
-    animateHeight2(true);
-    animateHeight3(true);
-    animateHeight4(true);
+    // 只在函數存在時呼叫（Wizard 模式下這些函數可能不存在）
+    if (typeof animateHeight === 'function') animateHeight(true);
+    if (typeof animateHeight1 === 'function') animateHeight1(true);
+    if (typeof animateHeight2 === 'function') animateHeight2(true);
+    if (typeof animateHeight3 === 'function') animateHeight3(true);
+    if (typeof animateHeight4 === 'function') animateHeight4(true);
 }
 
 function addLivingRoom(BtnID) {//这个加点的
@@ -157,7 +157,10 @@ function init() {
 
     // d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
     // d3.select('body').select('#LeftGraphSVG').selectAll('.TransCircle').remove();
-    document.getElementById("graphSearch").style = "cursor: default;color: #000;text-align: center;vertical-align: middle;line-height: 26px;position: absolute;margin-left: 360px;";
+    var graphSearchEl = document.getElementById("graphSearch");
+    if (graphSearchEl) {
+        graphSearchEl.style = "cursor: default;color: #000;text-align: center;vertical-align: middle;line-height: 26px;position: absolute;margin-left: 360px;";
+    }
 
     d3.select('body').select('#LeftLayoutSVG').selectAll('rect').remove();
     d3.select('body').select('#LeftLayoutSVG').selectAll('polygon').remove();
@@ -241,8 +244,11 @@ function ListBox(ret, rooms) {
 }
 
 function NumSearch() {
-    document.getElementById("graphdiv").style = "display:none;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 300px;";
-    document.getElementById("layoutdiv").style = "display:none;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 400px;";
+    var graphdivEl = document.getElementById("graphdiv");
+    var layoutdivEl = document.getElementById("layoutdiv");
+    if (graphdivEl) graphdivEl.style = "display:none;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 300px;";
+    if (layoutdivEl) layoutdivEl.style = "display:none;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 400px;";
+
 
     d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
     d3.select('body').select('#LeftGraphSVG').selectAll('.TransCircle').remove();
@@ -529,7 +535,7 @@ function CreateLeftPlan(roombx, hsex, door, windows, indoor, windowsline, rmsize
             .attr("stroke-width", 1).attr("class", "windowsline");
     }
 
-    d3.select('body').select('#LeftLayoutSVG').attr("transform", "scale(2)");
+    d3.select('body').select('#LeftLayoutSVG').attr("transform", "scale(3.5)");
     d3.select("#LeftLayoutSVG").attr("clip-path", "url(#clip-th)");
 
 }

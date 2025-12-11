@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="utf-8">
+    <title>Graph2plan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700' rel='stylesheet'>
+    <link href="../static/Page/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/select/element.min.css" rel="stylesheet">
+    <link href="../static/select/style.css" rel="stylesheet">
+    <link href="../static/css/layout.css" rel="stylesheet">
+    <link href="../static/css/index.css" rel="stylesheet">
+</head>
+
+<body onselectstart="return false">
+
+    <div class="wizard-container">
+        <!-- 左側步驟導覽 -->
+        <div class="step-nav">
+            <div class="step-nav-title">Graph2plan</div>
+
+            <div class="step-item active" data-step="1" onclick="goToStep(1)">
+                <div class="step-number"><span>1</span></div>
+                <div class="step-label">Load</div>
+            </div>
+
+            <div class="step-item disabled" data-step="2" onclick="goToStep(2)">
+                <div class="step-number"><span>2</span></div>
+                <div class="step-label">Search</div>
+            </div>
+
+            <div class="step-item disabled" data-step="3" onclick="goToStep(3)">
+                <div class="step-number"><span>3</span></div>
+                <div class="step-label">Edit & Generate</div>
+            </div>
+
+            <div class="step-item disabled" data-step="4" onclick="goToStep(4)">
+                <div class="step-number"><span>4</span></div>
+                <div class="step-label">Save</div>
+            </div>
+        </div>
+
+        <!-- 右側內容區 -->
+        <div class="step-content-area">
+
+            <!-- Step 1: Load -->
+            <div class="step-content active" id="step1">
+                <div class="step-content-title">Step 1: Load Floor Plan</div>
+                <div class="step-content-desc">上傳平面圖邊界檔案開始</div>
+
+                <div class="upload-zone">
+                    <input type="file" id="input" onchange="wizardLoadFile(this.files)">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">點擊或拖曳檔案至此處上傳</div>
+                </div>
+            </div>
+
+            <!-- Step 2: Filter + Search + Results (整合) -->
+            <div class="step-content" id="step2">
+                <div class="step-content-title">Step 2: Filter & Search</div>
+                <div class="step-content-desc">設定篩選條件並搜尋格局</div>
+
+                <div style="display: flex; gap: 20px;">
+                    <!-- 左側：篩選條件 -->
+                    <div style="width: 320px; min-width: 320px;">
+                        <div class="card">
+                            <div class="card-title">Filter Conditions</div>
+
+                            <!-- BedRoom -->
+                            <div id="BedRoomVue" style="margin-bottom:15px;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                    <img src="../static/icon/BedRoom.png" width="18" height="18" alt="">
+                                    <span id="BedRoomlb" style="font-weight:500;">BedRoom</span>
+                                </div>
+                                <el-radio-group id="BedRoom" v-model="BedRoomradio1" size="small" @change="BedRoomnum">
+                                    <el-radio-button label="Any"></el-radio-button>
+                                    <el-radio-button label="1+"></el-radio-button>
+                                    <el-radio-button label="2+"></el-radio-button>
+                                    <el-radio-button label="3+"></el-radio-button>
+                                    <el-radio-button label="4+"></el-radio-button>
+                                </el-radio-group>
+                            </div>
+
+                            <!-- BathRoom -->
+                            <div id="BathRoomVue" style="margin-bottom:15px;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                    <img src="../static/icon/BathRoom.png" width="18" height="18" alt="">
+                                    <span id="BathRoomlb" style="font-weight:500;">BathRoom</span>
+                                </div>
+                                <el-radio-group id="BathRoom" v-model="BathRoomradio1" size="small"
+                                    @change="BathRoomnum">
+                                    <el-radio-button label="Any"></el-radio-button>
+                                    <el-radio-button label="1+"></el-radio-button>
+                                    <el-radio-button label="2+"></el-radio-button>
+                                    <el-radio-button label="3+"></el-radio-button>
+                                </el-radio-group>
+                            </div>
+
+                            <!-- Other Rooms -->
+                            <div id="otherVue" style="margin-bottom:15px;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                    <img src="../static/icon/Other.png" width="18" height="18" alt="">
+                                    <span id="otherlb" style="font-weight:500;">Other Rooms</span>
+                                </div>
+                                <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:13px;">
+                                    <div>
+                                        <span id="Kitchenlb">Kitchen:</span>
+                                        <el-radio-group id="Kitchen" v-model="Kitchenradio1" size="mini"
+                                            @change="Kitchennum">
+                                            <el-radio-button label="Any"></el-radio-button>
+                                            <el-radio-button label="1+"></el-radio-button>
+                                        </el-radio-group>
+                                    </div>
+                                    <div>
+                                        <span id="Balconylb">Balcony:</span>
+                                        <el-radio-group id="Balcony" v-model="Balconyradio1" size="mini"
+                                            @change="Balconynum">
+                                            <el-radio-button label="Any"></el-radio-button>
+                                            <el-radio-button label="1+"></el-radio-button>
+                                        </el-radio-group>
+                                    </div>
+                                    <div>
+                                        <span id="Storagelb">Storage:</span>
+                                        <el-radio-group id="Storage" v-model="Storageradio1" size="mini"
+                                            @change="Storagenum">
+                                            <el-radio-button label="Any"></el-radio-button>
+                                            <el-radio-button label="1+"></el-radio-button>
+                                        </el-radio-group>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Detail Rooms -->
+                            <div id="detailVue">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                    <img src="../static/icon/Detail.png" width="18" height="18" alt="">
+                                    <span id="detailedlb" style="font-weight:500;">Bedroom Details</span>
+                                </div>
+                                <div style="display:flex;gap:15px;font-size:13px;">
+                                    <div>
+                                        <span id="MasterRoomlb">Master:</span>
+                                        <el-radio-group id="MasterRoom" v-model="MasterRoomradio1" size="mini"
+                                            @change="MasterRoomnum">
+                                            <el-radio-button label="Any"></el-radio-button>
+                                            <el-radio-button label="1+"></el-radio-button>
+                                        </el-radio-group>
+                                    </div>
+                                    <div>
+                                        <span id="SecondRoomlb">Second:</span>
+                                        <el-radio-group id="SecondRoom" v-model="SecondRoomradio1" size="mini"
+                                            @change="SecondRoomnum">
+                                            <el-radio-button label="Any"></el-radio-button>
+                                            <el-radio-button label="1+"></el-radio-button>
+                                        </el-radio-group>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search Button -->
+                        <button class="btn btn-primary btn-lg btn-block" id="generate" onclick="wizardNumSearch()"
+                            style="width:100%;">
+                            <img src="../static/icon/Search.png" width="20" height="20" alt="">
+                            Number Search
+                        </button>
+                    </div>
+
+                    <!-- 右側區域 -->
+                    <div style="flex:1;min-width:0;overflow:hidden;">
+                        <!-- 上方：Results -->
+                        <div class="results-panel" id="listbox" style="width:100%;margin-bottom:20px;overflow:hidden;">
+                            <div class="results-title">Results</div>
+                            <ul id="hsList" class="todo-list"
+                                style="list-style:none;padding:10px;margin:0;display:flex;flex-wrap:nowrap;gap:10px;overflow-x:scroll;">
+                            </ul>
+                        </div>
+
+                        <!-- 下方：Output Graph + Predict Layout 並排 -->
+                        <div style="display:flex;gap:20px;">
+                            <!-- Output Graph -->
+                            <div class="graph-box" id="rightbox">
+                                <span class="graph-box-title">Output Graph</span>
+                                <svg id="RightLayoutSVG" width="256" height="256"
+                                    style="position:absolute;z-index:9;margin-top:128px;margin-left:128px;"></svg>
+                                <svg id="RightSVG" width="256" height="256"
+                                    style="position:absolute;z-index:999;margin-top:128px;margin-left:128px;"></svg>
+                            </div>
+
+                            <!-- Predict Layout -->
+                            <div class="graph-box" id="predictbox">
+                                <span class="graph-box-title">Predict Layout</span>
+                                <svg id="PredictSVG" width="256" height="256"
+                                    style="position:absolute;z-index:999;margin-top:128px;margin-left:128px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="next-step-btn" style="margin-top:20px;">
+                    <button class="btn btn-secondary" onclick="completeStep(2)">
+                        Continue to Edit & Generate →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Edit & Generate -->
+            <div class="step-content" id="step3">
+                <div class="step-content-title">Step 3: Edit & Generate</div>
+                <div class="step-content-desc">編輯節點、產生結果</div>
+
+                <!-- Add Node Bar -->
+                <div id="addVue" class="add-node-bar">
+                    <span style="font-weight:600;margin-right:10px;">Add Node:</span>
+                    <div class="add-node-item" id="BedRoom_a" onclick="addLivingRoom(this.id)">
+                        <div class="node-dot" style="background:#fff39a;"></div><span>Bedroom</span>
+                    </div>
+                    <div class="add-node-item" id="Bathroom_a" onclick="addLivingRoom(this.id)">
+                        <div class="node-dot" style="background:#bfecff;"></div><span>Bathroom</span>
+                    </div>
+                    <div class="add-node-item" id="Balcony_a" onclick="addLivingRoom(this.id)">
+                        <div class="node-dot" style="background:#d3d981;"></div><span>Balcony</span>
+                    </div>
+                    <div class="add-node-item" id="Kitchen_a" onclick="addLivingRoom(this.id)">
+                        <div class="node-dot" style="background:#f4d7d1;"></div><span>Kitchen</span>
+                    </div>
+                    <div class="add-node-item" id="Storage_a" onclick="addLivingRoom(this.id)">
+                        <div class="node-dot" style="background:#ffdfb6;"></div><span>Storage</span>
+                    </div>
+                </div>
+
+                <div class="graph-area">
+                    <!-- 左側圖形 -->
+                    <div class="graph-box" id="leftbox">
+                        <span class="graph-box-title">Input Graph</span>
+                        <svg id="LeftBaseSVG" width="256" height="256"
+                            style="background:#fff !important;margin-left:128px;margin-top:128px;position:absolute;"></svg>
+                        <svg id="LeftGraphSVG" width="256" height="256"
+                            style="z-index:999;margin-left:128px;margin-top:128px;position:absolute;"></svg>
+                        <svg id="LeftLayoutSVG" width="256" height="256"
+                            style="z-index:9;margin-left:128px;margin-top:128px;position:absolute;"></svg>
+                    </div>
+                </div>
+
+                <div class="action-buttons" style="margin-top:20px;">
+                    <button class="btn btn-primary btn-lg" id="transfer">Transfer</button>
+                    <button class="btn btn-success btn-lg" id="Generate">Generate</button>
+                    <button class="btn btn-secondary" onclick="completeStep(3)">Continue to Save →</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Save -->
+            <div class="step-content" id="step4">
+                <div class="step-content-title">Step 4: Save</div>
+                <div class="step-content-desc">輸出結果檔案</div>
+
+                <div class="card" style="text-align:center;padding:40px;">
+                    <div style="font-size:48px;margin-bottom:20px;">💾</div>
+                    <div style="font-size:18px;color:#333;margin-bottom:20px;">準備好輸出您的格局設計</div>
+                    <button class="btn btn-success btn-lg" id="downLoad">
+                        <a style="color:#fff;text-decoration:none;">Save .mat File</a>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右鍵選單 -->
+    <div id="isDelete" style="position:absolute;display:none;z-index:99999;border:1px solid #ccc;background:#f2f2f2;">
+        <ul style="margin:0;padding:0;text-align:center;list-style:none;" class="isDelete">
+            <li style="padding:5px;border:1px solid #ccc;">Delete</li>
+            <li style="padding:5px;border:1px solid #ccc;">Scale*0.25</li>
+            <li style="padding:5px;border:1px solid #ccc;">Scale*0.5</li>
+            <li style="padding:5px;border:1px solid #ccc;">Scale*2</li>
+            <li style="padding:5px;border:1px solid #ccc;">Scale*5</li>
+        </ul>
+    </div>
+    <style>
+        .isDelete li:hover {
+            color: #fff;
+            background: #1c00ff;
+        }
+    </style>
+
+    <!-- JavaScript -->
+    <script src="../static/Btopenjs/jquery-2.1.3.min.js"></script>
+    <script src="../static/select/vue.min.js"></script>
+    <script src="../static/select/element.min.js"></script>
+    <script src="../static/select/dealselect.js"></script>
+    <script src="../static/select/index.js"></script>
+    <script src="../static/select/index1.js"></script>
+    <script src="../static/select/index2.js"></script>
+    <script src="../static/select/index3.js"></script>
+    <script src="../static/select/index4.js"></script>
+    <script src="../static/js/d3.v5.min.js"></script>
+    <script src="../static/js/graph.js"></script>
+    <script>
+        const SETTINGS = {
+            rebound: { tension: 16, friction: 5 },
+            spinner: {
+                id: 'spinner', radius: 90, sides: 3, depth: 4,
+                colors: { background: '#f0f0f0', stroke: '#272633', base: null, child: '#272633' },
+                alwaysForward: true, restAt: 0.5, renderBase: false
+            }
+        };
+    </script>
+    <script src="../static/js/load.js"></script>
+    <script src="../static/js/buttonEvent.js"></script>
+    <script src="../static/Page/js/bootstrap.min.js"></script>
+    <script src="../static/js/mo.min.js"></script>
+    <script src="../static/js/btnEvent.js"></script>
+    <script src="../static/js/wizard.js"></script>
+
+</body>
+
+</html>

@@ -24,7 +24,7 @@ boxes_pred = []
 
 
 def home(request):
-    return render(request, "home.html", )
+    return render(request, "home_wizard.html", )
 
 
 def Init(request):
