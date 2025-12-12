@@ -621,6 +621,7 @@ def Save_Editbox(request):
     fp_end.data.newBox = np.array(box_out)
     fp_end.data.order = np.array(box_order)
     fp_end.data.rBoundary = [np.array(rb) for rb in rBoundary]
+    fp_end.data.rType = rType.astype(int)  # Required by add_dw_fp to add doors/windows
     fp_end.data = add_dw_fp(fp_end.data)
     sio.savemat("./static/" + userRoomID + ".mat", {"data": fp_end.data})
     flag=1

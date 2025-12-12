@@ -27,7 +27,13 @@ def get_room_boundary(box, boundary, order):
         
     polys = []
     for i in range(n):
-        polys.append(Box(*box[i]))
+        if np.isnan(box[i]).any():
+            polys.append(Polygon())
+        else:
+            try:
+                polys.append(Box(*box[i]))
+            except Exception:
+                polys.append(Polygon())
         
     new_box = box.copy()
     r_boundary = [None] * n

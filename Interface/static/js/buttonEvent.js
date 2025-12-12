@@ -238,16 +238,18 @@ function ListBox(ret, rooms) {
             // 存儲選中的數據，用於 Step 2 -> Step 3 自動 Transfer
             selectedRooms = rooms;
             selectedRoomID = Rightid;
-            document.getElementById("transfer").onclick = function () {
-                d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
-                d3.select('body').select('#LeftGraphSVG').selectAll('.TransCircle').remove();
-                CreateLeftGraph(rooms, Rightid);
-                // d3.select("body").select("#LeftGraphSVG").select("#" + roomid).attr('scalesize',1);
-                document.getElementById("graphSearch").style = "display:none;cursor: default;color: #000;text-align: center;vertical-align: middle;line-height: 26px;position: absolute;margin-left: 160px;";
-                isTrans = 1;
-                document.getElementById("graphdiv").style = "display:block;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 300px;";
-                document.getElementById("layoutdiv").style = "display:block;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 400px;";
-            }
+            // Auto-transfer since button is removed
+            d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
+            d3.select('body').select('#LeftGraphSVG').selectAll('.TransCircle').remove();
+            CreateLeftGraph(rooms, Rightid);
+            // d3.select("body").select("#LeftGraphSVG").select("#" + roomid).attr('scalesize',1);
+            var graphSearchEl = document.getElementById("graphSearch");
+            if (graphSearchEl) graphSearchEl.style = "display:none;cursor: default;color: #000;text-align: center;vertical-align: middle;line-height: 26px;position: absolute;margin-left: 160px;";
+            isTrans = 1;
+            var graphDivEl = document.getElementById("graphdiv");
+            if (graphDivEl) graphDivEl.style = "display:block;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 300px;";
+            var layoutDivEl = document.getElementById("layoutdiv");
+            if (layoutDivEl) layoutDivEl.style = "display:block;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 400px;";
             console.timeEnd('time')
         }
 
@@ -1029,13 +1031,16 @@ function GetEditLayout() {
     newRects.each(function (d, i) {
         var newrect = [];
         var idlist = this.id.split("_");
-        newrect.push(idlist[0]);
-        newrect.push(idlist[1]);
-        newrect.push(this.x.animVal.value);
-        newrect.push(this.y.animVal.value);
-        newrect.push(this.x.animVal.value + this.width.animVal.value);
-        newrect.push(this.y.animVal.value + this.height.animVal.value);
-        LayRect.push(newrect);
+        // Verify we have a valid room ID (format: Name_ID)
+        if (idlist.length >= 2 && idlist[1] && idlist[1] !== "undefined" && idlist[1] !== "null") {
+            newrect.push(idlist[0]);
+            newrect.push(idlist[1]);
+            newrect.push(this.x.animVal.value);
+            newrect.push(this.y.animVal.value);
+            newrect.push(this.x.animVal.value + this.width.animVal.value);
+            newrect.push(this.y.animVal.value + this.height.animVal.value);
+            LayRect.push(newrect);
+        }
     });
     return LayRect
 }
@@ -1164,36 +1169,26 @@ function CreateLeftGraph(rooms, roomID) {
                 if (arr = document.cookie.match(reg))
                     hsname = arr[2];
                 console.log(focus_rect);
-                if (document.getElementById("graph").checked == true) {
+                // Always execute editing save logic as 'graph' checkbox doesn't exist
+                console.log("editing");
+                var NewLay = [];
+                NewLay = GetEditLayout();
+                var newGraph = [];
+                newGraph = GetEditGraph(ret['rmpos']);
+                $.get("/index/Save_Editbox/", {
+                    'NewLay': JSON.stringify(NewLay),
+                    'NewGraph': JSON.stringify(newGraph),
+                    'userRoomID': rooms.toString().split(',')[0].split('.')[0],
+                    'adptRoomID': roomID
+                }, function (flag) {
+
                     var link = document.createElement('a');
                     link.href = "../static/" + hsname.split(".")[0] + ".mat";
                     var event = document.createEvent('MouseEvents');
                     event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
                     link.dispatchEvent(event);
-                } else {
-                    console.log("editing");
-                    var NewLay = [];
-                    NewLay = GetEditLayout();
-                    var newGraph = [];
-                    newGraph = GetEditGraph(ret['rmpos']);
-                    $.get("/index/Save_Editbox/", {
-                        'NewLay': JSON.stringify(NewLay),
-                        'NewGraph': JSON.stringify(newGraph),
-                        'userRoomID': rooms.toString().split(',')[0],
-                        'adptRoomID': roomID
-                    }, function (flag) {
 
-                        var link = document.createElement('a');
-                        link.href = "../static/" + hsname.split(".")[0] + ".png.mat";
-                        var event = document.createEvent('MouseEvents');
-                        event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-                        link.dispatchEvent(event);
-
-
-
-
-                    });
-                }
+                });
 
             }
 
@@ -1306,29 +1301,29 @@ function circle_mousedown() {
     };
 
     if (d3.event.button == 2) {
-        var deletealert = confirm("是否删除？");
-        if (deletealert == true) {
-            selectPoint.remove();
-            focus_circle = false;
-            adjust_graph = true;
-            var pointInd = this.id.split("_")[1];
+        // var deletealert = confirm("是否删除？");
+        // if (deletealert == true) {
+        //     selectPoint.remove();
+        //     focus_circle = false;
+        //     adjust_graph = true;
+        //     var pointInd = this.id.split("_")[1];
 
-            var lines = d3.select("body").select("#LeftGraphSVG").selectAll(".TransLine");
-            lines.each(function (d, i) {
-                var startPoint = this.id.split("_")[1];
-                var endPoint = this.id.split("_")[2];
+        //     var lines = d3.select("body").select("#LeftGraphSVG").selectAll(".TransLine");
+        //     lines.each(function (d, i) {
+        //         var startPoint = this.id.split("_")[1];
+        //         var endPoint = this.id.split("_")[2];
 
-                if (startPoint == pointInd || endPoint == pointInd) {
-                    adjust_graph = true;
-                    d3.select(this).remove();
-                }
-            })
-        }
+        //         if (startPoint == pointInd || endPoint == pointInd) {
+        //             adjust_graph = true;
+        //             d3.select(this).remove();
+        //         }
+        //     })
+        // }
         var leftsvg = document.getElementById('LeftGraphSVG');
 
         //自定义右键菜单唤醒和关闭
-        isDelete.style.left = (d3.event.clientX - 256) + 'px';
-        isDelete.style.top = (d3.event.clientY) + 'px';
+        isDelete.style.left = d3.event.pageX + 'px';
+        isDelete.style.top = d3.event.pageY + 'px';
         isDelete.style.display = 'block';
         var pointInd = this.id.split("_")[1];
 
