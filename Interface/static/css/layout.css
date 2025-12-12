@@ -273,8 +273,19 @@
     position: relative;
     flex: 1;
     min-width: 300px;
-    height: 480px;
+    height: calc(100vh - 340px);
+    min-height: 400px;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    /* 水平置中 */
+    align-items: center;
+    /* 垂直置中 */
+}
+
+/* Step 2 專用：較小的 graph-box */
+#step2 .graph-box {
+    height: calc(100vh - 650px);
 }
 
 .graph-box-title {

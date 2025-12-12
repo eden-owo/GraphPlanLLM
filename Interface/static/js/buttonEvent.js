@@ -11,6 +11,9 @@ var selectRect;
 var startRectvalue = [-1, -1, -1, -1];
 var startPoint = [-1, -1, -1, -1, -1];
 var RelRectvalue = [];
+// 存儲用戶上傳的邊界數據
+var userBoundaryExterior = null;
+var userBoundaryDoor = null;
 $(document).ready(function () {
     start();//执行函数
     isTrans = 0;
@@ -52,8 +55,12 @@ function start() {
 
         console.log("Left!");
 
-        let selectX = e.clientX - leftsvg.getBoundingClientRect().left;
-        let selectY = e.clientY - leftsvg.getBoundingClientRect().top;
+        // 計算點擊位置在 SVG 內部的座標
+        var rect = leftsvg.getBoundingClientRect();
+        var scaleX = 256 / rect.width;  // SVG 原始寬度 / 視覺寬度
+        var scaleY = 256 / rect.height; // SVG 原始高度 / 視覺高度
+        let selectX = (e.clientX - rect.left) * scaleX;
+        let selectY = (e.clientY - rect.top) * scaleY;
 
         var roomSelect = -1;
 
@@ -86,7 +93,7 @@ function start() {
             //     document.getElementById("graphSearch").style = "display:flex;cursor: default;color: #000;text-align: center;vertical-align: middle;line-height: 26px;position: absolute;margin-left: 160px;"
             //
             // }
-            CreateCircle(selectX / 2, selectY / 2, id);
+            CreateCircle(selectX, selectY, id);
             d3.select("body").select("#LeftGraphSVG").select("#" + id).attr('scalesize', 1);
             document.cookie = "ifSelectRoom=0";
             document.cookie = "RoomNum=" + (parseInt(curIndex) + 1)
@@ -177,7 +184,9 @@ function RightInit() {
     d3.select('body').select('#RightLayoutSVG').selectAll('rect').remove();
     d3.select('body').select('#RightLayoutSVG').selectAll('polygon').remove();
     d3.select('body').select('#RightLayoutSVG').selectAll('clipPath').remove();
-
+    // 清空 PredictSVG 和 PredictLayoutSVG
+    d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
+    d3.select('body').select('#PredictSVG').selectAll('*').remove();
 }
 
 function ListBox(ret, rooms) {
@@ -213,6 +222,8 @@ function ListBox(ret, rooms) {
             console.time('time');
             console.log(this.id.split("_")[1]);
             CreateRightImage(this.id.split("_")[1]);
+            // 同時在 PredictSVG 中繪製預測佈局
+            CreatePredictLayout(this.id.split("_")[1]);
             var Rightid = this.id.split("_")[1];
             document.getElementById("transfer").onclick = function () {
                 d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
@@ -415,6 +426,9 @@ function LoadTestBoundary(files) {
         var border = 4;
         islLoadTest = 1;
         var hsex = ret['exterior'];
+        // 保存用戶邊界數據供 PredictSVG 使用
+        userBoundaryExterior = hsex;
+        userBoundaryDoor = ret['door'];
         d3.select("#LeftBaseSVG")
             .append("polygon")
             .attr("points", hsex)
@@ -432,9 +446,28 @@ function LoadTestBoundary(files) {
             .attr("stroke", fontdoor_color)
             .attr("stroke-width", border);
 
+        // 同時在 PredictLayoutSVG 繪製用戶上傳的邊界（如同 Input Graph 的 LeftBaseSVG）
+        d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
+        d3.select('body').select('#PredictSVG').selectAll('*').remove();
+        d3.select("#PredictLayoutSVG")
+            .append("polygon")
+            .attr("points", hsex)
+            .attr("fill", "none")
+            .attr("stroke", roomcolor("Exterior wall"))
+            .attr("stroke-width", border);
+        d3.select('#PredictLayoutSVG').append('line')
+            .attr("x1", parseInt(door[0]))
+            .attr("y1", door[1])
+            .attr("x2", door[2])
+            .attr("y2", door[3])
+            .attr("stroke", fontdoor_color)
+            .attr("stroke-width", border);
+        d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
+        d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(1.5)");
+
     })
-    d3.select('body').select('#LeftBaseSVG').attr("transform", "scale(2)");
-    d3.select('body').select('#LeftGraphSVG').attr("transform", "scale(2)");
+    d3.select('body').select('#LeftBaseSVG').style("transform", "translateX(-50%) scale(1.5)");
+    d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(1.5)");
 
     NumSearch();
 }
@@ -535,7 +568,7 @@ function CreateLeftPlan(roombx, hsex, door, windows, indoor, windowsline, rmsize
             .attr("stroke-width", 1).attr("class", "windowsline");
     }
 
-    d3.select('body').select('#LeftLayoutSVG').attr("transform", "scale(3.5)");
+    d3.select('body').select('#LeftLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
     d3.select("#LeftLayoutSVG").attr("clip-path", "url(#clip-th)");
 
 }
@@ -572,7 +605,7 @@ function CreateRightImage(roomID) {
                 .attr("stroke-width", 2)
                 .attr("id", (i + 1) + "-" + ret['rmpos'][i][1])
         }
-        d3.select('body').select('#RightSVG').attr("transform", "scale(2)");
+        d3.select('body').select('#RightSVG').style("transform", "translateX(-50%) scale(1.5)");
 
         var border = 4;
         //Layout room
@@ -625,8 +658,110 @@ function CreateRightImage(roomID) {
             .attr("stroke", fontdoor_color)
             .attr("stroke-width", 6);
     });
-    d3.select('body').select('#RightLayoutSVG').attr("transform", "scale(2)");
+    d3.select('body').select('#RightLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
 
+}
+
+// 清空 PredictSVG 和 PredictLayoutSVG
+function PredictInit() {
+    d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
+    d3.select('body').select('#PredictSVG').selectAll('*').remove();
+}
+
+// 在 PredictSVG 中繪製節點圖（與 Output Graph 一樣的點和線）
+function CreatePredictLayout(roomID) {
+    // 清空 PredictSVG（節點圖）和 PredictLayoutSVG（房間布局）
+    d3.select('body').select('#PredictSVG').selectAll('*').remove();
+    d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
+
+    // 如果沒有用戶邊界數據，不繪製
+    if (!userBoundaryExterior || !userBoundaryDoor) {
+        console.log("No user boundary data available for PredictSVG");
+        return;
+    }
+
+    $.getJSON("/index/LoadTrainHouse/", { 'roomID': roomID }, function (ret) {
+        var border = 4;
+        var interiorwall_color = roomcolor("Interior wall");
+
+        // === PredictLayoutSVG: 繪製房間布局（與 RightLayoutSVG 一致）===
+        var roombx = ret["hsbox"];
+        for (var i = 0; i < roombx.length; i++) {
+            var rx = roombx[i][0][0];
+            var ry = roombx[i][0][1];
+            var rw = roombx[i][0][2] - roombx[i][0][0];
+            var rh = roombx[i][0][3] - roombx[i][0][1];
+            var color = roomcolor(roombx[i][1][0]);
+
+            d3.select("#PredictLayoutSVG")
+                .append("rect")
+                .attr("x", rx)
+                .attr("y", ry)
+                .attr("width", rw)
+                .attr("height", rh)
+                .attr("stroke-width", 3)
+                .attr("stroke", interiorwall_color)
+                .attr("fill", color)
+                .attr("id", "predict_layout_" + roombx[i][1][0]);
+        }
+
+        // 使用用戶的邊界作為 clip path
+        d3.select("#PredictLayoutSVG").append("clipPath")
+            .attr("id", "Predictclip-th")
+            .append("polygon")
+            .attr("points", userBoundaryExterior);
+        d3.select("#PredictLayoutSVG").attr("clip-path", "url(#Predictclip-th)");
+
+        // 繪製用戶的外牆邊界
+        d3.select("#PredictLayoutSVG")
+            .append("polygon")
+            .attr("points", userBoundaryExterior)
+            .attr("fill", "none")
+            .attr("stroke", roomcolor("Exterior wall"))
+            .attr("stroke-width", 6);
+
+        // 繪製用戶的大門
+        var door = userBoundaryDoor.split(",");
+        var fontdoor_color = roomcolor("Front door");
+        d3.select('#PredictLayoutSVG').append('line')
+            .attr("x1", door[0])
+            .attr("y1", door[1])
+            .attr("x2", door[2])
+            .attr("y2", door[3])
+            .attr("stroke", fontdoor_color)
+            .attr("stroke-width", 6);
+
+        // === PredictSVG: 繪製節點圖（與 RightSVG 一致）===
+        // 繪製圖形邊（線）
+        for (var i = 0; i < ret['hsedge'].length; i++) {
+            var roomA = ret['hsedge'][i][0];
+            var roomB = ret['hsedge'][i][1];
+
+            d3.select('body').select('#PredictSVG').append('line')
+                .attr("x1", ret['rmpos'][roomA][2])
+                .attr("y1", ret['rmpos'][roomA][3])
+                .attr("x2", ret['rmpos'][roomB][2])
+                .attr("y2", ret['rmpos'][roomB][3])
+                .attr("stroke", "#000000")
+                .attr("stroke-width", "2px")
+                .attr("id", "predict_edge_" + ret['rmpos'][roomA][1] + "-" + ret['rmpos'][roomB][1]);
+        }
+
+        // 繪製節點（圓）
+        for (var i = 0; i < ret['rmpos'].length; i++) {
+            d3.select('body').select('#PredictSVG').append('circle')
+                .attr("cx", ret['rmpos'][i][2])
+                .attr("cy", ret['rmpos'][i][3])
+                .attr("fill", roomcolor(ret['rmpos'][i][1]))
+                .attr("r", ret['rmsize'][i][0][0])
+                .attr("stroke", "#000000")
+                .attr("stroke-width", 2)
+                .attr("id", "predict_node_" + (i + 1) + "-" + ret['rmpos'][i][1]);
+        }
+    });
+
+    d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
+    d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(1.5)");
 }
 
 function GetEditGraph(ret) {
@@ -748,6 +883,9 @@ function CreateLeftGraph(rooms, roomID) {
                     }
                     Circlesize.attr("r", adjust_ret['rmsize'][i][0]);
                 }
+
+                // 注意：不更新節點位置，保持用戶設置的位置
+                // 這樣連續 Generate 時結果才會穩定
             });
         };
 
@@ -777,6 +915,38 @@ function CreateLeftGraph(rooms, roomID) {
         }, function (adjust_ret) {
             // console.log("ret");
             CreateLeftPlan(adjust_ret['roomret'], adjust_ret['exterior'], adjust_ret["door"], adjust_ret["windows"], adjust_ret["indoor"], adjust_ret["windowsline"]);
+
+            // 更新節點位置以匹配房間佈局的中心座標
+            // roomret 格式: [[x1,y1,x2,y2], [roomType], roomIndex]
+            for (var i = 0; i < adjust_ret['roomret'].length; i++) {
+                var roomBox = adjust_ret['roomret'][i][0]; // [x1, y1, x2, y2]
+                var roomType = adjust_ret['roomret'][i][1][0]; // 房間類型名稱
+                var roomIndex = adjust_ret['roomret'][i][2]; // 房間索引
+
+                // 計算房間中心座標
+                var centerX = (roomBox[0] + roomBox[2]) / 2;
+                var centerY = (roomBox[1] + roomBox[3]) / 2;
+
+                // 找到對應的節點並更新位置
+                var circleId = "TransCircle_" + roomIndex + "_" + roomType;
+                var circle = d3.select("body").select("#LeftGraphSVG").select("#" + circleId);
+                if (!circle.empty()) {
+                    circle.attr("cx", centerX).attr("cy", centerY);
+
+                    // 同時更新與該節點相連的線條
+                    var transLines = d3.select("body").select("#LeftGraphSVG").selectAll(".TransLine");
+                    transLines.each(function (d, j) {
+                        var lineId = this.id.split("_");
+                        if (parseInt(lineId[1]) == roomIndex) {
+                            d3.select(this).attr("x1", centerX).attr("y1", centerY);
+                        }
+                        if (parseInt(lineId[2]) == roomIndex) {
+                            d3.select(this).attr("x2", centerX).attr("y2", centerY);
+                        }
+                    });
+                }
+            }
+
             document.getElementById("downLoad").onclick = function () {
                 var arr, reg = new RegExp("(^| )hsname=([^;]*)(;|$)");
                 if (arr = document.cookie.match(reg))
@@ -818,7 +988,7 @@ function CreateLeftGraph(rooms, roomID) {
         });
 
     });
-    d3.select('body').select('#LeftGraphSVG').attr("transform", "scale(2)");
+    d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(1.5)");
 
 }
 
@@ -1027,8 +1197,11 @@ function circle_mousemove() {
 
     if (focus_circle) {
         var leftsvg = document.getElementById('LeftGraphSVG');
-        let newX = d3.event.x - leftsvg.getBoundingClientRect().left;
-        let newY = d3.event.y - leftsvg.getBoundingClientRect().top;
+        var rect = leftsvg.getBoundingClientRect();
+        var scaleX = 256 / rect.width;  // SVG 原始寬度 / 視覺寬度
+        var scaleY = 256 / rect.height; // SVG 原始高度 / 視覺高度
+        let newX = (d3.event.x - rect.left) * scaleX;
+        let newY = (d3.event.y - rect.top) * scaleY;
 
         // console.log(newX + " " + newY)
 
@@ -1040,15 +1213,15 @@ function circle_mousemove() {
             var tmp_array = (this.id).split("_");
 
             if (tmp_array[1] == pointID) {
-                d3.select(this).attr("x1", newX / 2).attr("y1", newY / 2);
+                d3.select(this).attr("x1", newX).attr("y1", newY);
             }
             if (tmp_array[2] == pointID) {
-                d3.select(this).attr("x2", newX / 2).attr("y2", newY / 2);
+                d3.select(this).attr("x2", newX).attr("y2", newY);
             }
         })
 
         var selectPoint = d3.select("body").select("#LeftGraphSVG").select("#" + this.id)
-            .attr("cx", newX / 2).attr("cy", newY / 2);
+            .attr("cx", newX).attr("cy", newY);
         adjust_graph = true;
         // console.log(adjust_graph, "adjust")
     }

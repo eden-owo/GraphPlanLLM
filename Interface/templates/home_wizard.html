@@ -11,7 +11,7 @@
     <link href="../static/Page/css/bootstrap.min.css" rel="stylesheet">
     <link href="../static/select/element.min.css" rel="stylesheet">
     <link href="../static/select/style.css" rel="stylesheet">
-    <link href="../static/css/layout.css" rel="stylesheet">
+    <link href="../static/css/layout.css?v=2" rel="stylesheet">
     <link href="../static/css/index.css" rel="stylesheet">
 </head>
 
@@ -183,17 +183,19 @@
                             <!-- Output Graph -->
                             <div class="graph-box" id="rightbox">
                                 <span class="graph-box-title">Output Graph</span>
-                                <svg id="RightLayoutSVG" width="256" height="256"
-                                    style="position:absolute;z-index:9;margin-top:128px;margin-left:128px;"></svg>
-                                <svg id="RightSVG" width="256" height="256"
-                                    style="position:absolute;z-index:999;margin-top:128px;margin-left:128px;"></svg>
+                                <svg id="RightLayoutSVG" width="220" height="220"
+                                    style="position:absolute;z-index:9;top:100px;left:50%;transform:translateX(-50%);"></svg>
+                                <svg id="RightSVG" width="220" height="220"
+                                    style="position:absolute;z-index:999;top:100px;left:50%;transform:translateX(-50%);"></svg>
                             </div>
 
                             <!-- Predict Layout -->
                             <div class="graph-box" id="predictbox">
                                 <span class="graph-box-title">Predict Layout</span>
-                                <svg id="PredictSVG" width="256" height="256"
-                                    style="position:absolute;z-index:999;margin-top:128px;margin-left:128px;"></svg>
+                                <svg id="PredictLayoutSVG" width="220" height="220"
+                                    style="position:absolute;z-index:9;top:100px;left:50%;transform:translateX(-50%);"></svg>
+                                <svg id="PredictSVG" width="220" height="220"
+                                    style="position:absolute;z-index:999;top:100px;left:50%;transform:translateX(-50%);"></svg>
                             </div>
                         </div>
                     </div>
@@ -236,11 +238,11 @@
                     <div class="graph-box" id="leftbox">
                         <span class="graph-box-title">Input Graph</span>
                         <svg id="LeftBaseSVG" width="256" height="256"
-                            style="background:#fff !important;margin-left:128px;margin-top:128px;position:absolute;"></svg>
-                        <svg id="LeftGraphSVG" width="256" height="256"
-                            style="z-index:999;margin-left:128px;margin-top:128px;position:absolute;"></svg>
+                            style="background:#fff !important;position:absolute;z-index:1;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
                         <svg id="LeftLayoutSVG" width="256" height="256"
-                            style="z-index:9;margin-left:128px;margin-top:128px;position:absolute;"></svg>
+                            style="position:absolute;z-index:9;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                        <svg id="LeftGraphSVG" width="256" height="256"
+                            style="position:absolute;z-index:999;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
                     </div>
                 </div>
 
@@ -307,7 +309,7 @@
         };
     </script>
     <script src="../static/js/load.js"></script>
-    <script src="../static/js/buttonEvent.js"></script>
+    <script src="../static/js/buttonEvent.js?v=4"></script>
     <script src="../static/Page/js/bootstrap.min.js"></script>
     <script src="../static/js/mo.min.js"></script>
     <script src="../static/js/btnEvent.js"></script>

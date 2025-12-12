@@ -32,6 +32,7 @@ urlpatterns = [
     path(r'index/Save_Editbox/', views.Save_Editbox),
 
     path('home', views.home),
+    path('index/wizard/', views.home),  # Wizard 路由
 
 
 ]
