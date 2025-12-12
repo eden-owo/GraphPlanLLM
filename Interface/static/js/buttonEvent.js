@@ -14,6 +14,9 @@ var RelRectvalue = [];
 // 存儲用戶上傳的邊界數據
 var userBoundaryExterior = null;
 var userBoundaryDoor = null;
+// 存儲選中的結果數據，用於 Step 2 -> Step 3 自動 Transfer
+var selectedRooms = null;
+var selectedRoomID = null;
 $(document).ready(function () {
     start();//执行函数
     isTrans = 0;
@@ -225,6 +228,9 @@ function ListBox(ret, rooms) {
             // 同時在 PredictSVG 中繪製 Transfer 後的預測佈局（節點圖 + 用戶邊界）
             CreatePredictTransfer(rooms, this.id.split("_")[1]);
             var Rightid = this.id.split("_")[1];
+            // 存儲選中的數據，用於 Step 2 -> Step 3 自動 Transfer
+            selectedRooms = rooms;
+            selectedRoomID = Rightid;
             document.getElementById("transfer").onclick = function () {
                 d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
                 d3.select('body').select('#LeftGraphSVG').selectAll('.TransCircle').remove();
