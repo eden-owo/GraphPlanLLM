@@ -156,6 +156,9 @@ function selectRoomType(roomType, id) {
 }
 
 function init() {
+    // 重置時顯示 placeholder
+    $('#rightbox .placeholder-text').show();
+
     d3.select('body').select('#RightSVG').selectAll('line').remove();
     d3.select('body').select('#RightSVG').selectAll('circle').remove();
 
@@ -180,6 +183,7 @@ function init() {
 }
 
 function RightInit() {
+    // 移除這裡的 show，避免點擊結果時重新顯示
     d3.select('body').select('#RightSVG').selectAll('line').remove();
     d3.select('body').select('#RightSVG').selectAll('circle').remove();
     d3.select('body').select('#RightLayoutSVG').selectAll('line').remove();
@@ -213,6 +217,9 @@ function ListBox(ret, rooms) {
         itembt.appendChild(itemimg);
         itembt.onclick = function () {
             RightInit();
+            // 隱藏 placeholder
+            $('#rightbox .placeholder-text').hide();
+
             var all = document.getElementsByClassName("api-text");
             var i;
             for (i = 0; i < all.length; i++) {

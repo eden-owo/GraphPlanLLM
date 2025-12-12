@@ -327,6 +327,20 @@
     max-height: 516px;
 }
 
+.placeholder-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    color: #999;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px;
+    border-radius: 8px;
+    z-index: 100;
+    pointer-events: none;
+}
+
 .results-title {
     padding: 15px;
     font-weight: 600;
