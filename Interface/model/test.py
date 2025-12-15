@@ -267,5 +267,150 @@ def get_userinfo_net(userRoomID,adptRoomID):
             boxes_pred[i][j]=float(boxes_pred[i][j])
     return fp_end,boxes_pred, gene_layout, boxes_refeine
 
+
+def get_llm_layout(testname, nodes, edges, positions):
+    """
+    使用 LLM 生成的 Graph 產生房間佈局
+    
+    Args:
+        testname: 測試資料名稱 (用戶邊界)
+        nodes: 房間類型列表 ["LivingRoom", "MasterRoom", ...]
+        edges: 邊連接 [[0, 1], [1, 2], ...]
+        positions: 節點位置 [[x, y], ...]
+        
+    Returns:
+        dict: 包含 roomret, indoor, windows, windowsline 等資料
+    """
+    global model
+    
+    # 取得用戶邊界資料
+    test_index = vw.testNameList.index(testname.split(".")[0])
+    test_data = vw.test_data[test_index]
+    
+    # 創建一個簡單的資料結構來模擬 FloorPlan 需要的 data 物件
+    class LLMGraphData:
+        def __init__(self, boundary, box, edge):
+            self.boundary = boundary
+            self.box = box
+            self.edge = edge
+            self.order = None
+    
+    # 準備邊界資料
+    boundary = test_data.boundary
+    
+    # 計算邊界的 bounding box
+    external = boundary[:, :2]
+    x_min, x_max = np.min(external[:, 0]), np.max(external[:, 0])
+    y_min, y_max = np.min(external[:, 1]), np.max(external[:, 1])
+    
+    # 根據 positions 和 nodes 創建初始 box
+    # box 格式: [x1, y1, x2, y2, type_id]
+    boxes = []
+    avg_width = (x_max - x_min) / (len(nodes) ** 0.5 + 1)
+    avg_height = (y_max - y_min) / (len(nodes) ** 0.5 + 1)
+    
+    for i, node_type in enumerate(nodes):
+        type_id = vocab['object_name_to_idx'].get(node_type, 0)
+        x, y = positions[i]
+        
+        # 計算初始房間大小
+        half_w = avg_width / 2
+        half_h = avg_height / 2
+        
+        x1 = max(x - half_w, x_min + 5)
+        y1 = max(y - half_h, y_min + 5)
+        x2 = min(x + half_w, x_max - 5)
+        y2 = min(y + half_h, y_max - 5)
+        
+        boxes.append([x1, y1, x2, y2, type_id])
+    
+    boxes = np.array(boxes)
+    
+    # 創建 edge 資料
+    edge_array = np.array([[e[0], e[1], 0] for e in edges])
+    
+    # 創建 LLM Graph Data
+    llm_data = LLMGraphData(boundary, boxes, edge_array)
+    
+    # 使用 FloorPlan 封裝
+    fp = FloorPlan(llm_data)
+    fp.adjust_graph()  # 調整節點位置
+    
+    # 呼叫模型生成佈局
+    s = time.perf_counter()
+    boxes_pred, gene_layout, boxes_refine = test(vw.model, fp)
+    e = time.perf_counter()
+    print(f' LLM model test time: {e - s:.2f}s')
+    
+    boxes_pred = boxes_pred * 255
+    
+    # 準備 align_fp 需要的資料
+    boundary_list = [[float(b[0]), float(b[1]), float(b[2]) if len(b) > 2 else 0, float(b[3]) if len(b) > 3 else 0] 
+                     for b in boundary.tolist()]
+    
+    rooms = fp.get_rooms(tensor=False)
+    rNode = np.array(rooms).astype(int)
+    
+    # 準備 Edge 資料 (從 triples 轉換)
+    triples = fp.get_triples(tensor=False)
+    Edge = [[float(u), float(v), float(t)] for u, v, t in triples[:, [0, 2, 1]]]
+    
+    # 呼叫 align_fp 進行佈局優化
+    align_start = time.perf_counter()
+    try:
+        from align_fp_python import align_fp
+        
+        box_out, box_order, rBoundary = align_fp(
+            boundary_list, 
+            boxes_pred, 
+            rNode, 
+            Edge, 
+            fp=None,
+            threshold=18.0
+        )
+        
+        align_end = time.perf_counter()
+        print(f' LLM align_fp time: {align_end - align_start:.2f}s')
+        
+        # 使用 align_fp 優化後的結果
+        boxes_final = np.array(box_out)
+        box_order = list(box_order)
+        
+    except Exception as e:
+        print(f' align_fp 錯誤 (使用原始預測): {e}')
+        import traceback
+        traceback.print_exc()
+        # 如果 align_fp 失敗，使用原始預測
+        boxes_final = boxes_pred
+        box_order = list(range(1, len(nodes) + 1))
+    
+    # 組裝 roomret
+    roomret = []
+    for i in range(len(box_order)):
+        idx = int(box_order[i]) - 1
+        if idx < len(boxes_final):
+            if hasattr(boxes_final[idx], 'tolist'):
+                box = boxes_final[idx].tolist()
+            else:
+                box = list(boxes_final[idx])
+            room_type = vocab['object_idx_to_name'][int(rooms[idx])] if idx < len(rooms) else nodes[idx]
+            roomret.append([box, [room_type], idx])
+    
+    # 簡化的門窗資料
+    indoor = []
+    windows = []
+    windowsline = []
+    
+    return {
+        'roomret': roomret,
+        'indoor': indoor,
+        'windows': windows,
+        'windowsline': windowsline,
+        'boxes_pred': boxes_final.tolist() if hasattr(boxes_final, 'tolist') else list(boxes_final),
+        'box_order': box_order
+    }
+
+
 if __name__ == "__main__":
     pass
+

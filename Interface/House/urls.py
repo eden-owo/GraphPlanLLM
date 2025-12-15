@@ -33,6 +33,9 @@ urlpatterns = [
 
     path('home', views.home),
     path('index/wizard/', views.home),  # Wizard 路由
+    path('index/LLMGenerateGraph/', views.LLMGenerateGraph),  # LLM Graph 生成
+    path('index/LLMRegenerateLayout/', views.LLMRegenerateLayout),  # LLM 重新生成佈局
+    path('index/LLMSaveLayout/', views.LLMSaveLayout),  # LLM 儲存佈局
 
 
 ]

@@ -14,6 +14,8 @@ import math
 import pandas as pd
 import threading
 # import matlab.engine
+import model.llm_service as llm_service
+import model.graph_preprocessor as graph_preprocessor
 
 global test_data, test_data_topk, testNameList, trainNameList
 global train_data, trainNameList, trainTF, train_data_eNum, train_data_rNum
@@ -792,6 +794,240 @@ def retrieve_bf(tf_trainsub, datum, k=20):
         index = np.argpartition(dist, k)[:k]
         index = index[np.argsort(dist[index])]
     return index
+
+
+def LLMGenerateGraph(request):
+    """
+    使用 LLM 從自然語言生成 Graph，並直接生成格局
+    
+    GET 參數:
+        prompt: 用戶的自然語言描述 (如 "三房兩衛一廳")
+        testName: 測試資料名稱 (用戶上傳的邊界檔案名)
+    
+    返回:
+        JSON 包含生成的 Graph 資料和格局結果
+    """
+    start = time.perf_counter()
+    
+    try:
+        prompt = request.GET.get("prompt", "")
+        testname = request.GET.get("testName", "").split(".")[0]
+        
+        if not prompt:
+            return JsonResponse({"error": "請提供格局描述"}, status=400)
+        
+        if not testname:
+            return JsonResponse({"error": "請先上傳邊界檔案"}, status=400)
+        
+        print(f"=== LLMGenerateGraph ===")
+        print(f"Prompt: {prompt}")
+        print(f"TestName: {testname}")
+        
+        # 1. 取得用戶邊界資料
+        test_index = testNameList.index(testname)
+        data = test_data[test_index]
+        boundary = data.boundary.tolist()
+        
+        # 2. 使用 LLM 解析自然語言 → nodes + edges
+        llm_start = time.perf_counter()
+        graph_data = llm_service.parse_natural_language(prompt)
+        llm_end = time.perf_counter()
+        print(f"LLM 解析時間: {llm_end - llm_start:.2f}s")
+        print(f"LLM 輸出: {graph_data}")
+        
+        nodes = graph_data["nodes"]
+        edges = graph_data["edges"]
+        
+        # 3. 使用前處理模組生成完整的 Graph 屬性
+        preprocess_start = time.perf_counter()
+        full_graph = graph_preprocessor.generate_graph_attributes(nodes, edges, boundary)
+        preprocess_end = time.perf_counter()
+        print(f"前處理時間: {preprocess_end - preprocess_start:.2f}s")
+        
+        # 4. 呼叫模型生成房間佈局
+        model_start = time.perf_counter()
+        try:
+            layout_result = mltest.get_llm_layout(testname, nodes, edges, full_graph["positions"])
+            has_layout = True
+        except Exception as e:
+            print(f"模型生成佈局錯誤: {e}")
+            import traceback
+            traceback.print_exc()
+            layout_result = None
+            has_layout = False
+        model_end = time.perf_counter()
+        print(f"模型生成時間: {model_end - model_start:.2f}s")
+        
+        # 5. 組裝返回資料 (格式與 LoadTrainHouse 相容)
+        data_js = {}
+        data_js["hsname"] = "llm_generated"
+        data_js["hsedge"] = full_graph["hsedge"]
+        data_js["rmpos"] = full_graph["rmpos"]
+        data_js["rmsize"] = [[size[0]] for size in full_graph["rmsize"]]
+        
+        # 邊界資訊
+        ex = ""
+        for i in range(len(data.boundary)):
+            ex = ex + str(data.boundary[i][0]) + "," + str(data.boundary[i][1]) + " "
+        data_js['exterior'] = ex
+        data_js["door"] = str(data.boundary[0][0]) + "," + str(data.boundary[0][1]) + "," + str(
+            data.boundary[1][0]) + "," + str(data.boundary[1][1])
+        
+        # 額外資訊供前端使用
+        data_js["llm_nodes"] = nodes
+        data_js["llm_edges"] = edges
+        data_js["positions"] = full_graph["positions"]
+        
+        # 如果有房間佈局，加入返回資料
+        if has_layout and layout_result:
+            data_js["roomret"] = layout_result["roomret"]
+            data_js["indoor"] = layout_result["indoor"]
+            data_js["windows"] = layout_result["windows"]
+            data_js["windowsline"] = layout_result["windowsline"]
+            data_js["has_layout"] = True
+        else:
+            data_js["has_layout"] = False
+        
+        end = time.perf_counter()
+        print(f"LLMGenerateGraph 總時間: {end - start:.2f}s")
+        
+        return JsonResponse(data_js)
+        
+    except ValueError as e:
+        print(f"LLMGenerateGraph 錯誤: {e}")
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        print(f"LLMGenerateGraph 未知錯誤: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"error": f"伺服器錯誤: {str(e)}"}, status=500)
+
+
+def LLMRegenerateLayout(request):
+    """
+    根據編輯後的 LLM Graph 重新生成房間佈局
+    
+    GET 參數:
+        testName: 測試資料名稱 (用戶邊界)
+        nodes: JSON 字串，房間類型列表
+        edges: JSON 字串，邊連接列表
+        positions: JSON 字串，節點位置列表
+    """
+    try:
+        testname = request.GET.get("testName", "").split(".")[0]
+        nodes = json.loads(request.GET.get("nodes", "[]"))
+        edges = json.loads(request.GET.get("edges", "[]"))
+        positions = json.loads(request.GET.get("positions", "[]"))
+        
+        if not testname:
+            return JsonResponse({"error": "請先上傳邊界檔案"}, status=400)
+        
+        print(f"=== LLMRegenerateLayout ===")
+        print(f"TestName: {testname}")
+        print(f"Nodes: {nodes}")
+        print(f"Edges: {edges}")
+        print(f"Positions: {positions}")
+        
+        # 取得用戶邊界資料
+        test_index = testNameList.index(testname)
+        data = test_data[test_index]
+        
+        # 呼叫模型生成佈局
+        layout_result = mltest.get_llm_layout(testname, nodes, edges, positions)
+        
+        # 轉換 numpy 型別為原生 Python 型別以支援 JSON 序列化
+        def convert_to_native(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, (np.int64, np.int32, np.int_)):
+                return int(obj)
+            elif isinstance(obj, (np.float64, np.float32, np.float_)):
+                return float(obj)
+            elif isinstance(obj, list):
+                return [convert_to_native(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {k: convert_to_native(v) for k, v in obj.items()}
+            return obj
+        
+        # 組裝返回資料
+        data_js = {}
+        data_js["roomret"] = convert_to_native(layout_result.get("roomret", []))
+        data_js["indoor"] = convert_to_native(layout_result.get("indoor", []))
+        data_js["windows"] = convert_to_native(layout_result.get("windows", []))
+        data_js["windowsline"] = convert_to_native(layout_result.get("windowsline", []))
+        
+        # 計算節點大小 (固定大小)
+        num_nodes = len(nodes)
+        data_js["rmsize"] = [[8] for _ in range(num_nodes)]  # 使用固定大小 8
+        
+        # 邊界資訊
+        ex = ""
+        for i in range(len(data.boundary)):
+            ex = ex + str(data.boundary[i][0]) + "," + str(data.boundary[i][1]) + " "
+        data_js['exterior'] = ex
+        data_js["door"] = str(data.boundary[0][0]) + "," + str(data.boundary[0][1]) + "," + str(
+            data.boundary[1][0]) + "," + str(data.boundary[1][1])
+        
+        return JsonResponse(data_js)
+        
+    except Exception as e:
+        print(f"LLMRegenerateLayout 錯誤: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def LLMSaveLayout(request):
+    """
+    儲存 LLM 生成的格局為 .mat 檔案
+    """
+    try:
+        NewGraph = json.loads(request.GET.get("NewGraph", "[]"))
+        NewLay = json.loads(request.GET.get("NewLay", "[]"))
+        userRoomID = request.GET.get("userRoomID", "")
+        
+        print(f"=== LLMSaveLayout ===")
+        print(f"userRoomID: {userRoomID}")
+        print(f"NewLay length: {len(NewLay)}")
+        print(f"NewGraph: {NewGraph}")
+        
+        if not userRoomID:
+            return JsonResponse({"error": "請先上傳邊界檔案"}, status=400)
+        
+        # 取得測試資料
+        test_index = testNameList.index(userRoomID.split(".")[0])
+        test_ = test_data[test_index]
+        
+        # 處理 NewLay 資料
+        NewLay = np.array(NewLay)
+        if len(NewLay) > 0:
+            NewLay = NewLay[np.argsort(NewLay[:, 1])][:, 2:]
+            NewLay = NewLay.astype(float).tolist()
+        
+        # 取得邊界
+        Boundary = test_.boundary
+        boundary = [[float(x), float(y), float(z), float(k)] for x, y, z, k in list(Boundary)]
+        
+        # 建立簡化的資料結構用於儲存
+        save_data = {
+            'boundary': np.array(boundary),
+            'box': np.array(NewLay) if len(NewLay) > 0 else np.array([]),
+            'newBox': np.array(NewLay) if len(NewLay) > 0 else np.array([]),
+        }
+        
+        # 儲存 .mat 檔案
+        mat_path = "./static/" + userRoomID.split('.')[0] + ".mat"
+        sio.savemat(mat_path, {"data": save_data})
+        
+        print(f"LLM .mat 檔案已儲存: {mat_path}")
+        
+        return JsonResponse({"success": True, "path": mat_path})
+        
+    except Exception as e:
+        print(f"LLMSaveLayout 錯誤: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 if __name__ == "__main__":

@@ -168,16 +168,17 @@
                             </button>
                         </div>
 
-                        <!-- LLM 建築案篩選區塊 -->
+                        <!-- LLM Graph Generation 區塊 -->
                         <div class="card" style="margin-top:10px;padding:12px;">
-                            <div class="card-title" style="margin-bottom:6px;font-size:14px;">🤖 LLM 建築案篩選</div>
-                            <textarea id="llmFilterPrompt" placeholder="請描述您對建築案的篩選需求..."
+                            <div class="card-title" style="margin-bottom:6px;font-size:14px;">🧠 LLM Graph Generation
+                            </div>
+                            <textarea id="llmGraphPrompt" placeholder="描述您想要的格局，例如：三房兩衛一廳，主臥連陽台..."
                                 style="width:100%;height:160px;padding:8px;border:1px solid #ddd;border-radius:6px;resize:none;font-size:13px;line-height:1.4;box-sizing:border-box;"></textarea>
 
-                            <!-- LLM Search Button -->
-                            <button class="btn btn-success btn-block" id="llmSearchBtn" onclick="wizardLLMSearch()"
+                            <!-- LLM Graph Generate Button -->
+                            <button class="btn btn-primary btn-block" id="llmGraphBtn" onclick="wizardLLMGraph()"
                                 style="width:100%;margin-top:8px;padding:8px 12px;font-size:14px;">
-                                🤖 LLM Search
+                                🧠 Generate Graph
                             </button>
                         </div>
                     </div>
