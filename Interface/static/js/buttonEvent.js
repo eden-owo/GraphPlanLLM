@@ -304,6 +304,12 @@ function NumSearch() {
         room.push(this.cy.animVal.value);
         rooms.push(room);
     });
+    // 顯示 NumSearch 請求資料到 Console
+    console.log("=== NumSearch Request ===");
+    console.log("rooms data:", rooms);
+    console.log("JSON string:", JSON.stringify(rooms));
+    console.log("=========================");
+
     $.get("/index/NumSearch/", { 'userInfo': JSON.stringify(rooms) }, function (ret) {
         ListBox(ret, rooms);
     });

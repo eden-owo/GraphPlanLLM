@@ -54,11 +54,11 @@ class DirectedLine():
     
     @staticmethod
     def lines_from_boundary(boundary):
-        print(f"DEBUG: boundary type={type(boundary)}, val={boundary}")
+        # print(f"DEBUG: boundary type={type(boundary)}, val={boundary}")
         try:
             _ = len(boundary)
         except TypeError:
-            print("DEBUG: boundary has no len(), returning []")
+            # print("DEBUG: boundary has no len(), returning []")
             return []
             
         if not hasattr(boundary, '__len__'): return []

@@ -161,6 +161,18 @@ def filter_graph(graph_):
 def NumSearch(request):
     start = time.perf_counter()
     data_new = json.loads(request.GET.get("userInfo"))
+    
+    # === 顯示 NumSearch 請求資料 ===
+    print("=" * 50)
+    print("=== NumSearch Request ===")
+    print(f"原始 userInfo: {request.GET.get('userInfo')}")
+    print(f"解析後資料: {data_new}")
+    if len(data_new) > 1:
+        print(f"  - testName: {data_new[0]}")
+        print(f"  - roomactarr (房間啟用): {data_new[1]}")
+        print(f"  - roomexaarr (精確匹配): {data_new[2]}")
+        print(f"  - roomnumarr (房間數量): {data_new[3]}")
+    print("=" * 50)
     testName = data_new[0].split(".")[0]
     test_index = testNameList.index(testName)
     topkList = []

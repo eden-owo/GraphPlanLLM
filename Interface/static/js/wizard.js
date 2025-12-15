@@ -125,3 +125,24 @@ function show(isShow) {
     // Wizard 模式下不需要透明度控制
     // 保持所有元素可見
 }
+
+// ========== LLM 篩選搜尋 ==========
+
+/**
+ * LLM 篩選搜尋（待實作後端 API）
+ */
+function wizardLLMSearch() {
+    var prompt = document.getElementById('llmFilterPrompt').value.trim();
+
+    if (!prompt) {
+        alert('請輸入篩選需求描述');
+        return;
+    }
+
+    console.log('=== LLM Search Request ===');
+    console.log('Prompt:', prompt);
+
+    // TODO: 呼叫後端 LLM API
+    // 目前先顯示提示訊息
+    alert('LLM 篩選功能開發中...\n\n您輸入的需求：\n' + prompt);
+}
