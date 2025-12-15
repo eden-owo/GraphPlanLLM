@@ -319,7 +319,7 @@ function NumSearch() {
 function roomcolor(rmcate) {
     switch (rmcate) {
         case "LivingRoom":
-            var color = d3.rgb(244, 242, 229)
+            var color = d3.rgb(200, 200, 200)  // Gray color for LivingRoom
             break;
         case "MasterRoom":
             var color = d3.rgb(253, 244, 171)
