@@ -22,38 +22,86 @@ global train_data, trainNameList, trainTF, train_data_eNum, train_data_rNum
 global engview, model
 global tf_train, centroids, clusters
 global boxes_pred
+
+# Initialize global variables to None
+test_data = None
+test_data_topk = None
+testNameList = None
+trainNameList = None
+train_data = None
+trainTF = None
+train_data_eNum = None
+train_data_rNum = None
+engview = None
+model = None
+tf_train = None
+centroids = None
+clusters = None
 boxes_pred = []
+
+# Lock for thread-safe initialization
+_init_lock = threading.Lock()
+_is_initialized = False
 
 
 def home(request):
     return render(request, "home_wizard.html", )
 
 
+def ensure_initialized():
+    """Ensure data is initialized. Called automatically by endpoints that need data."""
+    global _is_initialized
+    
+    if _is_initialized:
+        return True
+    
+    with _init_lock:
+        # Double-check after acquiring lock
+        if _is_initialized:
+            return True
+        
+        print("Auto-initializing data...")
+        start = time.perf_counter()
+        
+        # 使用多線程並行載入資料，加快初始化速度
+        thread_test = threading.Thread(target=getTestData)
+        thread_train = threading.Thread(target=getTrainData)
+        thread_retrieval = threading.Thread(target=loadRetrieval)
+        
+        # 同時啟動三個載入線程
+        thread_test.start()
+        thread_train.start()
+        thread_retrieval.start()
+        
+        # 等待測試資料和訓練資料載入完成（loadModel 需要這些資料）
+        thread_test.join()
+        thread_train.join()
+        
+        # loadModel 依賴 train_data，必須等待完成後才能執行
+        loadModel()
+        
+        # 確保 retrieval 資料也載入完成
+        thread_retrieval.join()
+        
+        end = time.perf_counter()
+        print('Auto-Init(model+test+train+engine+retrieval) time: %s Seconds' % (end - start))
+        
+        _is_initialized = True
+        return True
+
+
 def Init(request):
     start = time.perf_counter()
     
-    # 使用多線程並行載入資料，加快初始化速度
-    thread_test = threading.Thread(target=getTestData)
-    thread_train = threading.Thread(target=getTrainData)
-    thread_retrieval = threading.Thread(target=loadRetrieval)
+    global _is_initialized
+    if _is_initialized:
+        print("Already initialized, skipping...")
+        return HttpResponse(None)
     
-    # 同時啟動三個載入線程
-    thread_test.start()
-    thread_train.start()
-    thread_retrieval.start()
-    
-    # 等待測試資料和訓練資料載入完成（loadModel 需要這些資料）
-    thread_test.join()
-    thread_train.join()
-    
-    # loadModel 依賴 train_data，必須等待完成後才能執行
-    loadModel()
-    
-    # 確保 retrieval 資料也載入完成
-    thread_retrieval.join()
+    ensure_initialized()
     
     end = time.perf_counter()
-    print('Init(model+test+train+engine+retrieval) time: %s Seconds' % (end - start))
+    print('Init total time: %s Seconds' % (end - start))
 
     return HttpResponse(None)
 
@@ -118,6 +166,11 @@ def loadModel():
 
 
 def LoadTestBoundary(request):
+    global testNameList, test_data
+    
+    # Auto-initialize if needed
+    ensure_initialized()
+    
     start = time.perf_counter()
     testName = request.GET.get('testName').split(".")[0]
     test_index = testNameList.index(testName)
@@ -161,6 +214,11 @@ def filter_graph(graph_):
 
 
 def NumSearch(request):
+    global testNameList, test_data, trainNameList, train_data_rNum
+    
+    # Auto-initialize if needed
+    ensure_initialized()
+    
     start = time.perf_counter()
     data_new = json.loads(request.GET.get("userInfo"))
     
