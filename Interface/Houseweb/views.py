@@ -48,6 +48,11 @@ def home(request):
     return render(request, "home_wizard.html", )
 
 
+def home_classic(request):
+    """Classic single-page interface (home.html)"""
+    return render(request, "home.html", )
+
+
 def ensure_initialized():
     """Ensure data is initialized. Called automatically by endpoints that need data."""
     global _is_initialized

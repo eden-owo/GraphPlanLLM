@@ -31,8 +31,8 @@ urlpatterns = [
     path(r'index/RelBox/', views.RelBox),
     path(r'index/Save_Editbox/', views.Save_Editbox),
 
-    path('home', views.home),
-    path('index/wizard/', views.home),  # Wizard 路由
+    path('classic', views.home_classic),  # Classic 單頁式介面 (預設)
+    path('home', views.home),  # Wizard 步驟式介面
     path('index/LLMGenerateGraph/', views.LLMGenerateGraph),  # LLM Graph 生成
     path('index/LLMRegenerateLayout/', views.LLMRegenerateLayout),  # LLM 重新生成佈局
     path('index/LLMSaveLayout/', views.LLMSaveLayout),  # LLM 儲存佈局
