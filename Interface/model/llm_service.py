@@ -5,14 +5,14 @@ LLM Service Module
 import os
 import json
 import re
-from openai import OpenAI
+from groq import Groq
 from dotenv import load_dotenv
 
 # 載入環境變數
 load_dotenv()
 
-# 初始化 OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# 初始化 Groq client (使用免費額度)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # 可用的房間類型 (對應 utils.py 中的 room_label)
 ROOM_TYPES = [
@@ -94,7 +94,7 @@ def parse_natural_language(user_input: str) -> dict:
     """
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="llama-3.3-70b-versatile",  # Groq 免費模型，速度快且效果好
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_input}
