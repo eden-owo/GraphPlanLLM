@@ -14,8 +14,18 @@ import math
 import pandas as pd
 import threading
 # import matlab.engine
+import sys
+import os
+# Add Project Root (Graph2plan) to sys.path to allow importing siblings like PostProcess
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, "../../"))
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 import model.llm_service as llm_service
 import model.graph_preprocessor as graph_preprocessor
+from PostProcess.image_processor import ImageProcessor
+from django.views.decorators.csrf import csrf_exempt
 
 global test_data, test_data_topk, testNameList, trainNameList
 global train_data, trainNameList, trainTF, train_data_eNum, train_data_rNum
@@ -55,6 +65,11 @@ def home_classic(request):
 def home_example(request):
     """Example page interface with pre-loaded examples (home_example.html)"""
     return render(request, "home_example.html", )
+
+
+def home_wizard_upload(request):
+    """Wizard interface with upload capability (home_wizard_upload.html)"""
+    return render(request, "home_wizard_upload.html", )
 
 
 def ensure_initialized():
@@ -1120,6 +1135,95 @@ def LLMSaveLayout(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=500)
+
+
+class DynamicData:
+    def __init__(self, name, boundary):
+        self.name = name
+        self.boundary = np.array(boundary)
+
+@csrf_exempt
+def ProcessDimensions(request):
+    """
+    API to process raw dimensions (width, depth) and return boundary data.
+    Input: JSON {width: float, depth: float}
+    Output: JSON {boundary: [[x,y],...], door: [x1,y1,x2,y2]}
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            width = float(data.get('width'))
+            depth = float(data.get('depth'))
+            
+            processor = ImageProcessor()
+            raw_result = processor.process_dimensions(width, depth)
+            
+            # Format for frontend (match LoadTestBoundary format)
+            # exterior: "x1,y1 x2,y2 ..."
+            exterior_points = raw_result['exterior']
+            ex_str = ""
+            for p in exterior_points:
+                ex_str += f"{p[0]},{p[1]} "
+            
+            # door: "x1,y1,x2,y2"
+            d = raw_result['door']
+            door_str = f"{d[0]},{d[1]},{d[2]},{d[3]}"
+            
+            # Register in global test_data for NumSearch to work
+            global test_data, testNameList
+            
+            # Generate a temporary name
+            import time
+            timestamp = int(time.time())
+            testName = f"user_{timestamp}" 
+            
+            # Calculate boundary array for backend storage (Numpy array format expected by retrieval)
+            # Boundary format: [x, y, dir, isNew]
+            # We only have x,y. Let's fill dir/isNew with 0 for now.
+            # FloorPlan expects: x, y, dir, isNew
+            # Exterior points + Door points?
+            # From README: first two point indicate the front door.
+            # So we need to restructure boundary array: [DoorP1, DoorP2, Rest of Points...]
+            
+            # Reconstruct boundary for backend model
+            # Door: [x1, y1, x2, y2]
+            p1 = [d[0], d[1], 0, 1] 
+            p2 = [d[2], d[3], 0, 1]
+            
+            # Exterior
+            boundary_list = []
+            boundary_list.append(p1)
+            boundary_list.append(p2)
+            
+            for p in exterior_points:
+                 # Check if point is close to door points to avoid duplication?
+                 # Simple approach: Just add them all. The system might be robust.
+                 # Actually, let's just stick to the processor's output geometry.
+                 boundary_list.append([p[0], p[1], 0, 0])
+            
+            dynamic_data = DynamicData(testName, boundary_list)
+            
+            if test_data is None:
+                test_data = []
+            elif isinstance(test_data, np.ndarray):
+                test_data = test_data.tolist()
+                
+            if testNameList is None:
+                testNameList = []
+                
+            test_data.append(dynamic_data)
+            testNameList.append(testName)
+            
+            result = {
+                'exterior': ex_str.strip(),
+                'door': door_str,
+                'testName': testName # Send back to frontend
+            }
+            
+            return JsonResponse({'status': 'success', 'data': result})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Only POST method allowed'})
 
 
 if __name__ == "__main__":
