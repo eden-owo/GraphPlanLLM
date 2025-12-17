@@ -52,6 +52,10 @@ def home_classic(request):
     """Classic single-page interface (home.html)"""
     return render(request, "home.html", )
 
+def home_example(request):
+    """Example page interface with pre-loaded examples (home_example.html)"""
+    return render(request, "home_example.html", )
+
 
 def ensure_initialized():
     """Ensure data is initialized. Called automatically by endpoints that need data."""
@@ -190,6 +194,31 @@ def LoadTestBoundary(request):
     end = time.perf_counter()
     print('LoadTestBoundary time: %s Seconds' % (end - start))
     return HttpResponse(json.dumps(data_js), content_type="application/json")
+
+
+def GetExampleList(request):
+    """Get a list of example floor plan names for the example page"""
+    global testNameList
+    
+    # Auto-initialize if needed
+    ensure_initialized()
+    
+    # Priority example: 309 should be the first example
+    priority_example = "309"
+    
+    # Build example list with priority example first
+    example_list = []
+    if testNameList:
+        # Check if priority example exists in testNameList
+        if priority_example in testNameList:
+            example_list.append(priority_example)
+        
+        # Add other examples (up to 10 total)
+        for name in testNameList:
+            if name != priority_example and len(example_list) < 10:
+                example_list.append(name)
+    
+    return HttpResponse(json.dumps(example_list), content_type="application/json")
 
 
 def get_filter_func(mask, acc, num):

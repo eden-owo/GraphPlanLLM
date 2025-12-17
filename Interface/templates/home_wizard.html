@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Graph2plan</title>
+    <title>GraphPlanLLM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -55,6 +55,10 @@
                     <input type="file" id="input" onchange="wizardLoadFile(this.files)">
                     <div class="upload-icon">📁</div>
                     <div class="upload-text">點擊或拖曳檔案至此處上傳</div>
+                </div>
+                <div style="text-align: center; margin-top: 15px; font-size: 16px; color: #666;">
+                    或以 <a href="javascript:void(0)" onclick="wizardLoadExample();"
+                        style="color:#ff9800; text-decoration:underline; font-weight:bold; cursor:pointer;">範例</a> 做為參考
                 </div>
             </div>
 

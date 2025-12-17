@@ -124,4 +124,9 @@ HERE = os.path.join(HERE, '../')
 STATICFILES_DIRS = (
     os.path.join(HERE, 'static/'),
 )
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['[SCRUBBED_DOMAIN]', 'www.[SCRUBBED_DOMAIN]', 'localhost']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://[SCRUBBED_DOMAIN]',
+    'https://www.[SCRUBBED_DOMAIN]',
+]

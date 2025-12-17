@@ -119,6 +119,88 @@ function wizardLoadFile(files) {
 }
 
 /**
+ * Wizard 專用的 Load 範例函數
+ */
+function wizardLoadExample() {
+    // 取得範例列表，載入第一個範例
+    $.getJSON("/index/GetExampleList/", function (examples) {
+        if (examples && examples.length > 0) {
+            var exampleName = examples[0];
+
+            // 設置 cookie
+            document.cookie = "hsname=" + exampleName;
+
+            // 清空現有的 SVG
+            d3.select('body').select('#LeftBaseSVG').selectAll("svg > *").remove();
+            d3.select('body').select('#LeftGraphSVG').selectAll("svg > *").remove();
+            d3.select('body').select('#LeftLayoutSVG').selectAll("svg > *").remove();
+            d3.select('body').select('#RightLayoutSVG').selectAll("svg > *").remove();
+            d3.select('body').select('#RightSVG').selectAll("svg > *").remove();
+
+            // 載入範例邊界
+            $.get("/index/LoadTestBoundary", { 'testName': exampleName }, function (ret) {
+                var border = 4;
+                islLoadTest = 1;
+                var hsex = ret['exterior'];
+                userBoundaryExterior = hsex;
+                userBoundaryDoor = ret['door'];
+
+                // 繪製邊界到 LeftBaseSVG
+                d3.select("#LeftBaseSVG")
+                    .append("polygon")
+                    .attr("points", hsex)
+                    .attr("fill", "none")
+                    .attr("stroke", roomcolor("Exterior wall"))
+                    .attr("stroke-width", border);
+
+                var door = ret['door'].split(",");
+                d3.select('body').select('#LeftBaseSVG').append('line')
+                    .attr("x1", parseInt(door[0]))
+                    .attr("y1", door[1])
+                    .attr("x2", door[2])
+                    .attr("y2", door[3])
+                    .attr("stroke", roomcolor("Front door"))
+                    .attr("stroke-width", border);
+
+                // 繪製到 PredictLayoutSVG
+                d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
+                d3.select('body').select('#PredictSVG').selectAll('*').remove();
+                d3.select("#PredictLayoutSVG")
+                    .append("polygon")
+                    .attr("points", hsex)
+                    .attr("fill", "none")
+                    .attr("stroke", roomcolor("Exterior wall"))
+                    .attr("stroke-width", border);
+                d3.select('#PredictLayoutSVG').append('line')
+                    .attr("x1", parseInt(door[0]))
+                    .attr("y1", door[1])
+                    .attr("x2", door[2])
+                    .attr("y2", door[3])
+                    .attr("stroke", roomcolor("Front door"))
+                    .attr("stroke-width", border);
+
+                d3.select('body').select('#LeftBaseSVG').style("transform", "translateX(-50%) scale(1.5)");
+                d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(1.5)");
+                d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
+                d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(1.5)");
+
+                // 執行 NumSearch
+                NumSearch();
+
+                // 完成第一步，進入第二步
+                setTimeout(function () {
+                    completeStep(1);
+                }, 500);
+            });
+        } else {
+            alert("沒有可用的範例");
+        }
+    }).fail(function () {
+        alert("載入範例失敗");
+    });
+}
+
+/**
  * Wizard 專用的 Number Search
  */
 function wizardNumSearch() {
