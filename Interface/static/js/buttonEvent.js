@@ -487,8 +487,7 @@ function LoadTestBoundary(files) {
 
 
     })
-    d3.select('body').select('#LeftBaseSVG').style("transform", "translateX(-50%) scale(1.5)");
-    d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(1.5)");
+
 
     NumSearch();
 }
@@ -1159,7 +1158,7 @@ function CreateLeftGraph(rooms, roomID) {
         });
 
     });
-    d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(1.5)");
+
 
 }
 
