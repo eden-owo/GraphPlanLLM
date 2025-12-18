@@ -483,8 +483,8 @@ function LoadTestBoundary(files) {
             .attr("y2", door[3])
             .attr("stroke", fontdoor_color)
             .attr("stroke-width", border);
-        d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
-        d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(1.5)");
+
+
 
     })
     d3.select('body').select('#LeftBaseSVG').style("transform", "translateX(-50%) scale(1.5)");
@@ -633,7 +633,7 @@ function CreateRightImage(roomID) {
                 .attr("stroke-width", 2)
                 .attr("id", (i + 1) + "-" + ret['rmpos'][i][1])
         }
-        d3.select('body').select('#RightSVG').style("transform", "translateX(-50%) scale(1.5)");
+
 
         var border = 4;
         //Layout room
@@ -686,7 +686,7 @@ function CreateRightImage(roomID) {
             .attr("stroke", fontdoor_color)
             .attr("stroke-width", 6);
     });
-    d3.select('body').select('#RightLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
+
 
 }
 
@@ -788,8 +788,7 @@ function CreatePredictLayout(roomID) {
         }
     });
 
-    d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
-    d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(1.5)");
+
 }
 
 // 在 Step 2 點選 Results 時，將 transfer 結果繪製到 PredictSVG/PredictLayoutSVG
@@ -939,46 +938,6 @@ function CreatePredictTransfer(rooms, roomID) {
                     .attr("stroke-width", 1);
             }
         }
-
-        // Apply scaling by calculating bounding box and setting viewBox
-
-        // Helper to parse points string "x1,y1 x2,y2 ..."
-        function getBounds(pointsStr) {
-            if (!pointsStr) return { minX: 0, minY: 0, maxX: 500, maxY: 500 };
-            var points = pointsStr.trim().split(/\s+/);
-            var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            points.forEach(function (p) {
-                var coords = p.split(",");
-                if (coords.length === 2) {
-                    var x = parseFloat(coords[0]);
-                    var y = parseFloat(coords[1]);
-                    if (x < minX) minX = x;
-                    if (y < minY) minY = y;
-                    if (x > maxX) maxX = x;
-                    if (y > maxY) maxY = y;
-                }
-            });
-            if (minX === Infinity) return { minX: 0, minY: 0, maxX: 500, maxY: 500 };
-            return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
-        }
-
-        var bounds = getBounds(userBoundaryExterior);
-        var padding = 20;
-        var viewBoxVal = (bounds.minX - padding) + " " + (bounds.minY - padding) + " " +
-            (bounds.maxX - bounds.minX + padding * 2) + " " + (bounds.maxY - bounds.minY + padding * 2);
-
-        // Remove CSS transform
-        d3.select('body').select('#PredictLayoutSVG').style("transform", null);
-        d3.select('body').select('#PredictSVG').style("transform", null);
-
-        // Set viewBox
-        d3.select('body').select('#PredictLayoutSVG').attr("viewBox", viewBoxVal);
-        d3.select('body').select('#PredictSVG').attr("viewBox", viewBoxVal);
-
-        // Ensure width/height are 100% of container
-        d3.select('body').select('#PredictLayoutSVG').attr("width", "100%").attr("height", "100%");
-        d3.select('body').select('#PredictSVG').attr("width", "100%").attr("height", "100%");
-
 
     });
 }
