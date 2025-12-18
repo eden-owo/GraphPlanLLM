@@ -535,12 +535,19 @@ function CreateLeftPlan(roombx, hsex, door, windows, indoor, windowsline, rmsize
             .attr("fill", roomcolor("Interior door"));//填充颜色
     }
 
+
+    // Use global userBoundaryExterior if hsex is not passed correctly or we want to enforce user's boundary
+    if (typeof userBoundaryExterior !== 'undefined' && userBoundaryExterior) {
+        hsex = userBoundaryExterior;
+    }
+
     d3.select("#LeftLayoutSVG")
         .append("polygon")
         .attr("points", hsex)
         .attr("fill", "none")
         .attr("stroke", roomcolor("Exterior wall"))
         .attr("stroke-width", border);
+
     var door = door.split(",");
     var fontdoor_color = roomcolor("Front door");
     d3.select('body').select('#LeftLayoutSVG').append('line')
@@ -801,7 +808,11 @@ function CreatePredictTransfer(rooms, roomID) {
         var border = 4;
         var interiorwall_color = roomcolor("Interior wall");
 
-        // 繪製 Transfer 後的邊（線）到 PredictSVG
+        // CreatePredictTransfer logic updated to use TransGraph result directly
+
+        // --- Drawing Logic from TransGraph Response ---
+        // 1. Draw Edges
+        d3.select('body').select('#PredictSVG').selectAll('*').remove();
         for (var i = 0; i < ret['hsedge'].length; i++) {
             var roomA = ret['hsedge'][i][0];
             var roomB = ret['hsedge'][i][1];
@@ -818,7 +829,7 @@ function CreatePredictTransfer(rooms, roomID) {
                 .attr("class", "PredictTransLine");
         }
 
-        // 繪製 Transfer 後的節點（圓）到 PredictSVG
+        // 2. Draw Nodes
         for (var i = 0; i < ret['rmpos'].length; i++) {
             var title = ret['rmpos'][i][1];
             var circlecolor = roomcolor(title);
@@ -836,37 +847,11 @@ function CreatePredictTransfer(rooms, roomID) {
                 .text(title);
         }
 
-        // 組裝 NewGraph 用於呼叫 AdjustGraph
-        var GraphNode = [];
-        for (var i = 0; i < ret['rmpos'].length; i++) {
-            var newnode = [];
-            newnode.push(i);  // index
-            newnode.push(ret['rmpos'][i][1]);  // room type
-            newnode.push(ret['rmpos'][i][2]);  // x
-            newnode.push(ret['rmpos'][i][3]);  // y
-            newnode.push(1);  // scalesize
-            GraphNode.push(newnode);
-        }
-        var GraphEdge = [];
-        for (var i = 0; i < ret['hsedge'].length; i++) {
-            var newedge = [];
-            newedge.push(ret['hsedge'][i][0]);
-            newedge.push(ret['hsedge'][i][1]);
-            GraphEdge.push(newedge);
-        }
-        var NewGraph = [];
-        NewGraph.push(GraphNode);
-        NewGraph.push(GraphEdge);
-        NewGraph.push(ret['rmpos']);
+        // 3. Draw Layout (Rectangles) using ret['roomret'] which is now provided by TransGraph
+        var roombx = ret['roomret'];
+        d3.select('#PredictLayoutSVG').selectAll('*').remove();
 
-        // 呼叫 AdjustGraph API 產生房間佈局
-        $.get("/index/AdjustGraph/", {
-            'NewGraph': JSON.stringify(NewGraph),
-            'userRoomID': rooms.toString().split(',')[0],
-            'adptRoomID': roomID
-        }, function (adjust_ret) {
-            // 繪製房間矩形到 PredictLayoutSVG
-            var roombx = adjust_ret['roomret'];
+        if (roombx) {
             for (var i = 0; i < roombx.length; i++) {
                 var rx = roombx[i][0][0];
                 var ry = roombx[i][0][1];
@@ -886,9 +871,11 @@ function CreatePredictTransfer(rooms, roomID) {
                     .append("title")
                     .text(roombx[i][1][0]);
             }
+        }
 
-            // 繪製室內門
-            var indoor = adjust_ret["indoor"];
+        // 4. Draw Indoor Doors
+        var indoor = ret["indoor"];
+        if (indoor) {
             for (var i = 0; i < indoor.length; i++) {
                 d3.select("#PredictLayoutSVG").append("rect")
                     .attr("x", indoor[i][0])
@@ -897,36 +884,37 @@ function CreatePredictTransfer(rooms, roomID) {
                     .attr("height", indoor[i][3])
                     .attr("fill", roomcolor("Interior door"));
             }
+        }
 
-            // 使用用戶的邊界作為 clip path
-            d3.select("#PredictLayoutSVG").append("clipPath")
-                .attr("id", "Predictclip-th")
-                .append("polygon")
-                .attr("points", userBoundaryExterior);
-            d3.select("#PredictLayoutSVG").attr("clip-path", "url(#Predictclip-th)");
+        // 5. Draw Boundary (Clip and Polygon) - using userBoundaryExterior
+        d3.select("#PredictLayoutSVG").append("clipPath")
+            .attr("id", "Predictclip-th")
+            .append("polygon")
+            .attr("points", userBoundaryExterior);
+        d3.select("#PredictLayoutSVG").attr("clip-path", "url(#Predictclip-th)");
 
-            // 繪製用戶的外牆邊界
-            d3.select("#PredictLayoutSVG")
-                .append("polygon")
-                .attr("points", userBoundaryExterior)
-                .attr("fill", "none")
-                .attr("stroke", roomcolor("Exterior wall"))
-                .attr("stroke-width", border);
+        d3.select("#PredictLayoutSVG")
+            .append("polygon")
+            .attr("points", userBoundaryExterior)
+            .attr("fill", "none")
+            .attr("stroke", roomcolor("Exterior wall"))
+            .attr("stroke-width", border);
 
-            // 繪製用戶的大門
-            var door = userBoundaryDoor.split(",");
-            var fontdoor_color = roomcolor("Front door");
-            d3.select('#PredictLayoutSVG').append('line')
-                .attr("x1", parseInt(door[0]))
-                .attr("y1", door[1])
-                .attr("x2", door[2])
-                .attr("y2", door[3])
-                .attr("stroke", fontdoor_color)
-                .attr("stroke-width", border);
+        // 6. Draw Front Door
+        var door = userBoundaryDoor.split(",");
+        var fontdoor_color = roomcolor("Front door");
+        d3.select('#PredictLayoutSVG').append('line')
+            .attr("x1", parseInt(door[0]))
+            .attr("y1", door[1])
+            .attr("x2", door[2])
+            .attr("y2", door[3])
+            .attr("stroke", fontdoor_color)
+            .attr("stroke-width", border);
 
-            // 繪製窗戶
-            var windows = adjust_ret["windows"];
-            var wincolor = d3.rgb(195, 195, 195);
+        // 7. Draw Windows
+        var windows = ret["windows"];
+        var wincolor = d3.rgb(195, 195, 195);
+        if (windows) {
             for (var i = 0; i < windows.length; i++) {
                 d3.select("#PredictLayoutSVG").append("rect")
                     .attr("x", windows[i][0])
@@ -937,9 +925,10 @@ function CreatePredictTransfer(rooms, roomID) {
                     .attr("stroke", wincolor)
                     .attr("stroke-width", 1);
             }
+        }
 
-            // 繪製窗戶線
-            var windowsline = adjust_ret["windowsline"];
+        var windowsline = ret["windowsline"];
+        if (windowsline) {
             for (var i = 0; i < windowsline.length; i++) {
                 d3.select('#PredictLayoutSVG').append('line')
                     .attr("x1", windowsline[i][0])
@@ -949,38 +938,48 @@ function CreatePredictTransfer(rooms, roomID) {
                     .attr("stroke", wincolor)
                     .attr("stroke-width", 1);
             }
+        }
 
-            // 更新節點位置到房間中心
-            for (var i = 0; i < roombx.length; i++) {
-                var roomBox = roombx[i][0];
-                var roomType = roombx[i][1][0];
-                var roomIndex = roombx[i][2];
+        // Apply scaling by calculating bounding box and setting viewBox
 
-                var centerX = (roomBox[0] + roomBox[2]) / 2;
-                var centerY = (roomBox[1] + roomBox[3]) / 2;
-
-                var circleId = "PredictCircle_" + roomIndex + "_" + roomType;
-                var circle = d3.select("#PredictSVG").select("#" + circleId);
-                if (!circle.empty()) {
-                    circle.attr("cx", centerX).attr("cy", centerY);
-
-                    // 更新連線
-                    var transLines = d3.select("#PredictSVG").selectAll(".PredictTransLine");
-                    transLines.each(function (d, j) {
-                        var lineId = this.id.split("_");
-                        if (parseInt(lineId[1]) == roomIndex) {
-                            d3.select(this).attr("x1", centerX).attr("y1", centerY);
-                        }
-                        if (parseInt(lineId[2]) == roomIndex) {
-                            d3.select(this).attr("x2", centerX).attr("y2", centerY);
-                        }
-                    });
+        // Helper to parse points string "x1,y1 x2,y2 ..."
+        function getBounds(pointsStr) {
+            if (!pointsStr) return { minX: 0, minY: 0, maxX: 500, maxY: 500 };
+            var points = pointsStr.trim().split(/\s+/);
+            var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            points.forEach(function (p) {
+                var coords = p.split(",");
+                if (coords.length === 2) {
+                    var x = parseFloat(coords[0]);
+                    var y = parseFloat(coords[1]);
+                    if (x < minX) minX = x;
+                    if (y < minY) minY = y;
+                    if (x > maxX) maxX = x;
+                    if (y > maxY) maxY = y;
                 }
-            }
+            });
+            if (minX === Infinity) return { minX: 0, minY: 0, maxX: 500, maxY: 500 };
+            return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
+        }
 
-            d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
-            d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(1.5)");
-        });
+        var bounds = getBounds(userBoundaryExterior);
+        var padding = 20;
+        var viewBoxVal = (bounds.minX - padding) + " " + (bounds.minY - padding) + " " +
+            (bounds.maxX - bounds.minX + padding * 2) + " " + (bounds.maxY - bounds.minY + padding * 2);
+
+        // Remove CSS transform
+        d3.select('body').select('#PredictLayoutSVG').style("transform", null);
+        d3.select('body').select('#PredictSVG').style("transform", null);
+
+        // Set viewBox
+        d3.select('body').select('#PredictLayoutSVG').attr("viewBox", viewBoxVal);
+        d3.select('body').select('#PredictSVG').attr("viewBox", viewBoxVal);
+
+        // Ensure width/height are 100% of container
+        d3.select('body').select('#PredictLayoutSVG').attr("width", "100%").attr("height", "100%");
+        d3.select('body').select('#PredictSVG').attr("width", "100%").attr("height", "100%");
+
+
     });
 }
 

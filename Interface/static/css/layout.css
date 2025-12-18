@@ -290,17 +290,35 @@
     min-width: 300px;
     height: calc(100vh - 340px);
     min-height: 400px;
-    overflow: hidden;
+    overflow: hidden !important;
     display: flex;
     justify-content: center;
-    /* 水平置中 */
     align-items: center;
-    /* 垂直置中 */
+    /* 強制建立包含上下文，確保絕對定位的子元素被裁剪 */
+    contain: paint;
 }
 
 /* Step 2 專用：較小的 graph-box */
 #step2 .graph-box {
     height: calc(100vh - 650px);
+}
+
+/* 為所有 graph-box 內的 SVG 容器建立裁剪邊界 */
+#predictbox,
+#rightbox,
+#leftbox {
+    /* 確保容器本身建立裁剪上下文 */
+    isolation: isolate;
+}
+
+/* 限制 SVG 元素的可見區域 */
+#predictbox svg,
+#rightbox svg,
+#leftbox svg {
+    /* 多重保護：裁剪路徑 + 最大尺寸限制 */
+    clip-path: inset(0 0 0 0);
+    max-width: calc(100% - 4px);
+    max-height: calc(100% - 4px);
 }
 
 .graph-box-title {

@@ -58,6 +58,7 @@ def load_model():
     model.eval()
     return model
 
+
 def get_userinfo(userRoomID,adptRoomID):
     start = time.perf_counter()
     global model
@@ -75,7 +76,67 @@ def get_userinfo(userRoomID,adptRoomID):
     train_fp =FloorPlan(train_data,train=True)
     fp_end = test_fp.adapt_graph(train_fp)
     fp_end.adjust_graph()
+
+    # --- Added Adaptation Logic ---
+    # Run the model to generate layout based on the adapted graph and new boundary
+    s = time.perf_counter()
+    boxes_pred, gene_layout, boxes_refine = test(vw.model, fp_end)
+    e = time.perf_counter()
+    print(' model test time: %s Seconds' % (e - s))
+
+    boxes_pred = boxes_pred * 255
+    
+    fp_end.data.gene = gene_layout
+    rBox = boxes_pred[:]
+    # Box = [[float(x), float(y), float(z), float(k)] for x, y, z, k in rBox]
+    Box = rBox
+    
+    fp_end.data.boundary = np.array(boundary)
+    
+    rNode = fp_end.get_rooms(tensor=False)
+    # fp_end.data.rType = np.array(rNode).astype(int)
+    # fp_end.data.refineBox = np.array(Box)
+    
+    rEdge = fp_end.get_triples(tensor=False)[:, [0, 2, 1]]
+    Edge = [[float(u), float(v), float(type2)] for u, v, type2 in rEdge]
+    # fp_end.data.rEdge = np.array(Edge)
+    
+    startcom = time.perf_counter()
+    from align_fp_python import align_fp
+    
+    box_out, box_order, rBoundary = align_fp(
+        boundary, 
+        Box, 
+        rNode, 
+        Edge, 
+        fp=None, 
+        threshold=18.0
+    )
+    endcom = time.perf_counter()
+    print(' python.compute time: %s Seconds' % (endcom - startcom))
+
+    fp_end.data.newBox = np.array(box_out)
+    fp_end.data.order = np.array(box_order)
+    fp_end.data.rBoundary = [np.array(rb) for rb in rBoundary]
+    
+    # Critical: Update fp_end.data.box to use the generated boxes so that TransGraph sees them
+    # TransGraph uses: for x1, y1, x2, y2, cate in fp_end.data.box[:]
+    # box_out structure is [x1, y1, x2, y2]. We need to append category (cate)
+    
+    final_boxes = []
+    # box_order is 1-based index into rooms/boxes
+    for i in range(len(box_order)):
+        idx = int(box_order[i]) - 1
+        if idx < len(box_out):
+            b = box_out[idx]
+            # Get category from rNode (rooms)
+            cate = int(rNode[idx])
+            final_boxes.append([b[0], b[1], b[2], b[3], cate])
+            
+    fp_end.data.box = np.array(final_boxes)
+
     return fp_end
+
 
 
 def get_userinfo_adjust(userRoomID,adptRoomID,NewGraph):

@@ -388,7 +388,7 @@ def TransGraph(request):
     ymin, ymax = np.min(external[:, 1]), np.max(external[:, 1])
     area_ = (ymax - ymin) * (xmax - xmin)
     data_js["rmsize"] = [
-        [[20 * math.sqrt((float(x2) - float(x1)) * (float(y2) - float(y1)) / float(area_))], [mdul.room_label[cate][1]]]
+        [[20 * math.sqrt((float(x2) - float(x1)) * (float(y2) - float(y1)) / float(area_))], [mdul.room_label[int(cate)][1]]]
         for
         x1, y1, x2, y2, cate in fp_end.data.box[:]]
     # fp_end rmpos
@@ -403,6 +403,66 @@ def TransGraph(request):
     for k in range(len(center)):
         node = float(rooms[k]), mdul.room_label[int(rooms[k])][1], center[k][0], center[k][1], float(k)
         data_js["rmpos"].append(node)
+
+    # Construct roomret from fp_end data (which was aligned in get_userinfo)
+    data_js['roomret'] = []
+    # fp_end.data.box contains [x1, y1, x2, y2, category]
+    # We need to reconstruct the format: [[x1, y1, x2, y2], [label], index]
+    # Note: fp_end.data.box rows correspond to the rooms in order?
+    # In get_userinfo we constructed fp_end.data.box by iterating box_order.
+    # But wait, TransGraph iterates center/rooms which come from fp_end.data.box.
+    # So the indices match k.
+    
+    current_boxes = fp_end.data.box
+    if hasattr(fp_end.data, 'order'):
+         box_order = fp_end.data.order
+    else:
+         # Fallback if order missing
+         box_order = list(range(1, len(current_boxes) + 1))
+
+    for k in range(len(current_boxes)):
+        box = current_boxes[k]
+        # box structure: [x1, y1, x2, y2, cate]
+        rect = [float(box[0]), float(box[1]), float(box[2]), float(box[3])]
+        cate = int(box[4])
+        # TransGraph uses naive index k for rmpos.
+        # However, AdjustGraph uses box_order to assign IDs.
+        # If we use k here, we must ensure frontend uses k.
+        # CreatePredictTransfer uses roombx[i][2] as ID.
+        # If we use k, it should be fine as long as consistent.
+        # But wait, in get_userinfo we re-ordered fp_end.data.box based on box_order.
+        # So current_boxes[k] corresponds to k-th box in the final list.
+        # Does k correspond to original room index? No, it's the new order.
+        # But rmpos (nodes) also uses k.
+        # So nodes and boxes are aligned by index k.
+        
+        # We need to check what ID AdjustGraph assigns.
+        # AdjustGraph: int(box_order[k]) - 1.
+        # In get_userinfo, final_boxes was appended in loop over box_order.
+        # So k-th box in final_boxes corresponds to box_order[k].
+        # So the ID should be `int(box_order[k]) - 1`.
+        
+        if k < len(box_order):
+             original_idx = int(box_order[k]) - 1
+        else:
+             original_idx = k
+             
+        data = rect, [mdul.room_label[cate][1]], original_idx
+        data_js['roomret'].append(data)
+
+    # Add indoor, windows, windowsline (needed for frontend)
+    # Copied from AdjustGraph logic or simpler?
+    # AdjustGraph calculates them. TransGraph did not.
+    # We should calculate them or empty them.
+    # fp_end has windows data? get_userinfo didn't explicitly calc windows.
+    # But fp_end.adjust_graph() generates windows/indoor?
+    # No, adjust_graph() in FloorPlan might.
+    # Let's populate minimal data to avoid errors.
+    
+    data_js['indoor'] = [] # Simplified
+    data_js['windows'] = []
+    data_js['windowsline'] = []
+
 
     test_index = testNameList.index(testname.split(".")[0])
     data = test_data[test_index]
@@ -1186,20 +1246,46 @@ def ProcessDimensions(request):
             # So we need to restructure boundary array: [DoorP1, DoorP2, Rest of Points...]
             
             # Reconstruct boundary for backend model
-            # Door: [x1, y1, x2, y2]
-            p1 = [d[0], d[1], 0, 1] 
-            p2 = [d[2], d[3], 0, 1]
+            # The boundary needs to form a closed polygon with door embedded
+            # Exterior points from processor: [Top-Left, Top-Right, Bottom-Right, Bottom-Left]
+            # Door is on bottom edge: [door_x1, door_y, door_x2, door_y]
             
-            # Exterior
+            # Strategy: Walk the polygon inserting door points in the correct position
+            # Bottom edge goes from Bottom-Left to Bottom-Right
+            # We need: Bottom-Left -> Door_Start -> Door_End -> Bottom-Right
+            
             boundary_list = []
-            boundary_list.append(p1)
-            boundary_list.append(p2)
             
-            for p in exterior_points:
-                 # Check if point is close to door points to avoid duplication?
-                 # Simple approach: Just add them all. The system might be robust.
-                 # Actually, let's just stick to the processor's output geometry.
-                 boundary_list.append([p[0], p[1], 0, 0])
+            # exterior_points[0] = Top-Left [x1, y1]
+            # exterior_points[1] = Top-Right [x2, y1]
+            # exterior_points[2] = Bottom-Right [x2, y2]
+            # exterior_points[3] = Bottom-Left [x1, y2]
+            
+            # Start from Bottom-Left corner (this is where door segment begins)
+            bottom_left = [exterior_points[3][0], exterior_points[3][1], 1, 0]
+            
+            # Door start point
+            door_start = [d[0], d[1], 0, 1]
+            
+            # Door end point
+            door_end = [d[2], d[3], 1, 1]
+            
+            # Bottom-Right corner (after door)
+            bottom_right = [exterior_points[2][0], exterior_points[2][1], 2, 0]
+            
+            # Top-Right corner
+            top_right = [exterior_points[1][0], exterior_points[1][1], 3, 0]
+            
+            # Top-Left corner
+            top_left = [exterior_points[0][0], exterior_points[0][1], 0, 0]
+            
+            # Build boundary in correct order (counter-clockwise from bottom-left)
+            boundary_list.append(bottom_left)
+            boundary_list.append(door_start)
+            boundary_list.append(door_end)
+            boundary_list.append(bottom_right)
+            boundary_list.append(top_right)
+            boundary_list.append(top_left)
             
             dynamic_data = DynamicData(testName, boundary_list)
             
