@@ -314,7 +314,7 @@
 
 /* 為所有 graph-box 內的 SVG 容器建立裁剪邊界 */
 #predictbox,
-#ResultGraphbox,
+#rightbox,
 #leftbox {
     /* 確保容器本身建立裁剪上下文 */
     isolation: isolate;
@@ -322,10 +322,9 @@
 
 /* 限制 SVG 元素的可見區域 */
 #predictbox svg,
-#ResultGraphbox svg,
+#rightbox svg,
 #leftbox svg {
-    /* 多重保護：裁剪路徑 + 最大尺寸限制 */
-    clip-path: inset(0 0 0 0);
+    /* 移除強制的 inset 裁切，允許 JS 動態設定的 polygon clip-path 生效 */
     max-width: calc(100% - 4px);
     max-height: calc(100% - 4px);
 }

@@ -26,7 +26,7 @@ $(document).ready(function () {
 function show(isShow) {
     // 新佈局使用 app-container，設置透明度
     var elements = [
-        "leftbox", "ResultGraphbox", "listbox", "graphSearch", "Editing",
+        "leftbox", "rightbox", "listbox", "graphSearch", "Editing",
         "BedRoomVue", "BathRoomVue", "otherVue", "detailVue", "addVue"
     ];
     elements.forEach(function (id) {
@@ -157,16 +157,16 @@ function selectRoomType(roomType, id) {
 
 function init() {
     // 重置時顯示 placeholder
-    $('#ResultGraphbox .placeholder-text').show();
+    $('#rightbox .placeholder-text').show();
 
-    d3.select('body').select('#ResultGraphSVG').selectAll('line').remove();
-    d3.select('body').select('#ResultGraphSVG').selectAll('circle').remove();
+    d3.select('body').select('#RightSVG').selectAll('line').remove();
+    d3.select('body').select('#RightSVG').selectAll('circle').remove();
 
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('line').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('circle').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('rect').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('polygon').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('clipPath').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('line').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('circle').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('rect').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('polygon').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('clipPath').remove();
 
     // d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
     // d3.select('body').select('#LeftGraphSVG').selectAll('.TransCircle').remove();
@@ -182,15 +182,15 @@ function init() {
 
 }
 
-function ResultGraphInit() {
+function RightInit() {
     // 移除這裡的 show，避免點擊結果時重新顯示
-    d3.select('body').select('#ResultGraphSVG').selectAll('line').remove();
-    d3.select('body').select('#ResultGraphSVG').selectAll('circle').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('line').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('circle').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('rect').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('polygon').remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll('clipPath').remove();
+    d3.select('body').select('#RightSVG').selectAll('line').remove();
+    d3.select('body').select('#RightSVG').selectAll('circle').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('line').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('circle').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('rect').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('polygon').remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll('clipPath').remove();
     // 清空 PredictSVG 和 PredictLayoutSVG
     d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
     d3.select('body').select('#PredictSVG').selectAll('*').remove();
@@ -216,9 +216,9 @@ function ListBox(ret, rooms) {
         itemimg.src = "../static/Data/snapshot_train/" + ret[i];
         itembt.appendChild(itemimg);
         itembt.onclick = function () {
-            ResultGraphInit();
+            RightInit();
             // 隱藏 placeholder
-            $('#ResultGraphbox .placeholder-text').hide();
+            $('#rightbox .placeholder-text').hide();
 
             var all = document.getElementsByClassName("api-text");
             var i;
@@ -231,17 +231,17 @@ function ListBox(ret, rooms) {
             // d3.select('body').select('#LeftLayoutSVG').selectAll("svg > *").remove();
             console.time('time');
             console.log(this.id.split("_")[1]);
-            CreateResultGraphImage(this.id.split("_")[1]);
+            CreateRightImage(this.id.split("_")[1]);
             // 同時在 PredictSVG 中繪製 Transfer 後的預測佈局（節點圖 + 用戶邊界）
             CreatePredictTransfer(rooms, this.id.split("_")[1]);
-            var ResultGraphid = this.id.split("_")[1];
+            var Rightid = this.id.split("_")[1];
             // 存儲選中的數據，用於 Step 2 -> Step 3 自動 Transfer
             selectedRooms = rooms;
-            selectedRoomID = ResultGraphid;
+            selectedRoomID = Rightid;
             // Auto-transfer since button is removed
             d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
             d3.select('body').select('#LeftGraphSVG').selectAll('.TransCircle').remove();
-            CreateLeftGraph(rooms, ResultGraphid);
+            CreateLeftGraph(rooms, Rightid);
             // d3.select("body").select("#LeftGraphSVG").select("#" + roomid).attr('scalesize',1);
             var graphSearchEl = document.getElementById("graphSearch");
             if (graphSearchEl) graphSearchEl.style = "display:none;cursor: default;color: #000;text-align: center;vertical-align: middle;line-height: 26px;position: absolute;margin-left: 160px;";
@@ -263,7 +263,7 @@ function ListBox(ret, rooms) {
         hsList.insertBefore(itemli, hsList.firstChild);
     }
     console.time('time');
-    // CreateResultGraphImage(ret[0]);
+    // CreateRightImage(ret[0]);
     // ocument.getElementById("transfer").onclick = function () {
     //         CreateLeftGraph(rooms, ret[0]);}
     console.timeEnd('time')
@@ -434,8 +434,8 @@ function LoadTestBoundary(files) {
     d3.select('body').select('#LeftBaseSVG').selectAll("svg > *").remove();
     d3.select('body').select('#LeftGraphSVG').selectAll("svg > *").remove();
     d3.select('body').select('#LeftLayoutSVG').selectAll("svg > *").remove();
-    d3.select('body').select('#ResultGraphLayoutSVG').selectAll("svg > *").remove();
-    d3.select('body').select('#ResultGraphSVG').selectAll("svg > *").remove();
+    d3.select('body').select('#RightLayoutSVG').selectAll("svg > *").remove();
+    d3.select('body').select('#RightSVG').selectAll("svg > *").remove();
     document.getElementById('hsList').innerHTML = "";
     d3.select('body').select('#LeftBaseSVG').selectAll('polygon').remove();
     d3.select('body').select('#LeftBaseSVG').selectAll('line').remove();
@@ -600,14 +600,14 @@ function CreateLeftPlan(roombx, hsex, door, windows, indoor, windowsline, rmsize
 
 }
 
-function CreateResultGraphImage(roomID) {
+function CreateRightImage(roomID) {
     $.getJSON("/index/LoadTrainHouse/", { 'roomID': roomID }, function (ret) {
         //Graph edge
         for (var i = 0; i < ret['hsedge'].length; i++) {
             var roomA = ret['hsedge'][i][0];
             var roomB = ret['hsedge'][i][1];
 
-            d3.select('body').select('#ResultGraphSVG').append('line')
+            d3.select('body').select('#RightSVG').append('line')
                 .attr("x1", ret['rmpos'][roomA][2])
                 .attr("y1", ret['rmpos'][roomA][3])
                 .attr("x2", ret['rmpos'][roomB][2])
@@ -621,7 +621,7 @@ function CreateResultGraphImage(roomID) {
         console.log(ret['rmpos']);
         //Graph node
         for (var i = 0; i < ret['rmpos'].length; i++) {
-            d3.select('body').select('#ResultGraphSVG').append('circle')
+            d3.select('body').select('#RightSVG').append('circle')
                 .attr("cx", ret['rmpos'][i][2])
                 .attr("cy", ret['rmpos'][i][3])
                 .attr("fill", roomcolor(ret['rmpos'][i][1]))
@@ -646,7 +646,7 @@ function CreateResultGraphImage(roomID) {
             var rh = roombx[i][0][3] - roombx[i][0][1];
             var color = roomcolor(roombx[i][1][0]);
 
-            d3.select("#ResultGraphLayoutSVG")
+            d3.select("#RightLayoutSVG")
                 .append("rect")
                 .attr("x", rx)//每个矩形的起始x坐标
                 .attr("y", ry)
@@ -661,13 +661,13 @@ function CreateResultGraphImage(roomID) {
         var hsex = ret["exterior"];
 
         //clip over boundary
-        d3.select("#ResultGraphLayoutSVG").append("clipPath")
-            .attr("id", "ResultGraphclip-th")
+        d3.select("#RightLayoutSVG").append("clipPath")
+            .attr("id", "Rightclip-th")
             .append("polygon")
             .attr("points", hsex);
-        d3.select("#ResultGraphLayoutSVG").attr("clip-path", "url(#ResultGraphclip-th)");
+        d3.select("#RightLayoutSVG").attr("clip-path", "url(#Rightclip-th)");
         //Layout Boundary
-        d3.select("#ResultGraphLayoutSVG")
+        d3.select("#RightLayoutSVG")
             .append("polygon")
             .attr("points", hsex)
             .attr("fill", "none")
@@ -677,7 +677,7 @@ function CreateResultGraphImage(roomID) {
         var door = ret['door'].split(",");
 
         var fontdoor_color = roomcolor("Front door");
-        d3.select('body').select('#ResultGraphLayoutSVG').append('line')
+        d3.select('body').select('#RightLayoutSVG').append('line')
             .attr("x1", door[0])
             .attr("y1", door[1])
             .attr("x2", door[2])
@@ -711,7 +711,7 @@ function CreatePredictLayout(roomID) {
         var border = 4;
         var interiorwall_color = roomcolor("Interior wall");
 
-        // === PredictLayoutSVG: 繪製房間布局（與 ResultGraphLayoutSVG 一致）===
+        // === PredictLayoutSVG: 繪製房間布局（與 RightLayoutSVG 一致）===
         var roombx = ret["hsbox"];
         for (var i = 0; i < roombx.length; i++) {
             var rx = roombx[i][0][0];
@@ -758,7 +758,7 @@ function CreatePredictLayout(roomID) {
             .attr("stroke", fontdoor_color)
             .attr("stroke-width", 6);
 
-        // === PredictSVG: 繪製節點圖（與 ResultGraphSVG 一致）===
+        // === PredictSVG: 繪製節點圖（與 RightSVG 一致）===
         // 繪製圖形邊（線）
         for (var i = 0; i < ret['hsedge'].length; i++) {
             var roomA = ret['hsedge'][i][0];

@@ -56,8 +56,8 @@ $(function () {
             }
         })*/
 
-    $('#ResultGraphSVG').on('mousedown', function (e) {
-        console.log("ResultGraph!");
+    $('#RightSVG').on('mousedown', function (e) {
+        console.log("Right!");
     })
 
     function clearHighLight() {
