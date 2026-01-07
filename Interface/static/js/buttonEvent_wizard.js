@@ -483,9 +483,9 @@ function LoadTestBoundary(files) {
             .attr("y2", door[3])
             .attr("stroke", fontdoor_color)
             .attr("stroke-width", border);
-
-
-
+        d3.select('body').select('#LeftBaseSVG').style("transform", "translateX(-50%) scale(2)");
+        d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(2)");
+        d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(2)");
     })
 
 
@@ -595,7 +595,8 @@ function CreateLeftPlan(roombx, hsex, door, windows, indoor, windowsline, rmsize
             .attr("stroke-width", 1).attr("class", "windowsline");
     }
 
-    // d3.select('body').select('#LeftLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
+    d3.select('body').select('#LeftLayoutSVG').style("transform", "translateX(-50%) scale(2)");
+    d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(2)");
     d3.select("#LeftLayoutSVG").attr("clip-path", "url(#clip-th)");
 
 }
@@ -684,6 +685,9 @@ function CreateRightImage(roomID) {
             .attr("y2", door[3])
             .attr("stroke", fontdoor_color)
             .attr("stroke-width", 6);
+
+        d3.select('body').select('#RightSVG').style("transform", "translateX(-50%) scale(2)");
+        d3.select('body').select('#RightLayoutSVG').style("transform", "translateX(-50%) scale(2)");
     });
 
 
@@ -938,6 +942,8 @@ function CreatePredictTransfer(rooms, roomID) {
             }
         }
 
+        d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(2)");
+        d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(2)");
     });
 }
 

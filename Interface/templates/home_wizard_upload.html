@@ -12,7 +12,7 @@
     <link href="../static/select/element.min.css" rel="stylesheet">
     <link href="../static/select/style.css" rel="stylesheet">
     <link href="../static/css/index.css" rel="stylesheet">
-    <link href="../static/css/layout_wizard.css?v=101" rel="stylesheet">
+    <link href="../static/css/layout_wizard.css?v=103" rel="stylesheet">
 </head>
 
 <body onselectstart="return false">
@@ -224,18 +224,18 @@
                                     <span class="graph-box-title">Result Graph</span>
                                     <div class="placeholder-text">請選擇上方搜尋結果</div>
                                     <svg id="RightLayoutSVG" width="220" height="220"
-                                        style="position:absolute;z-index:9;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                                        style="position:absolute;z-index:9;top:-20px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
                                     <svg id="RightSVG" width="220" height="220"
-                                        style="position:absolute;z-index:999;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                                        style="position:absolute;z-index:999;top:-20px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
                                 </div>
 
                                 <!-- Transfer Result -->
                                 <div class="graph-box" id="predictbox" style="flex:1;height:100%;">
                                     <span class="graph-box-title">Transfer Result</span>
                                     <svg id="PredictLayoutSVG" width="220" height="220"
-                                        style="position:absolute;z-index:9;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                                        style="position:absolute;z-index:9;top:-20px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
                                     <svg id="PredictSVG" width="220" height="220"
-                                        style="position:absolute;z-index:999;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                                        style="position:absolute;z-index:999;top:-20px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
                                 </div>
                             </div>
 
@@ -359,7 +359,7 @@
     <script src="../static/js/mo.min.js"></script>
     <script src="../static/js/buttonEvent_wizard.js"></script>
     <script src="../static/js/btnEvent.js"></script>
-    <script src="../static/js/wizard_wizard.js"></script>
+    <script src="../static/js/wizard.js"></script>
     <script>
         function wizardUseDimensions() {
             const width = document.getElementById('roomWidth').value;
