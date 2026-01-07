@@ -1,75 +1,75 @@
 $(function () {
-    let startPoint = [0,0];
+    let startPoint = [0, 0];
 
     let generate = false;
     var roomSelect = 0;
     var mouseDown = false;
     var createLinew = false;
-/*
-    var leftsvg = document.getElementById('LeftGraphSVG');
-    leftsvg.oncontextmenu = function() {
-        return false;
-    }
-
-    $('#LeftGraphSVG').on('mousedown',function(e){
-
-        let selectX = e.clientX - leftsvg.getBoundingClientRect().left;
-        let selectY = e.clientY - leftsvg.getBoundingClientRect().top;
-
-        var arr,reg=new RegExp("(^| )ifSelectRoom=([^;]*)(;|$)");
-        if(arr=document.cookie.match(reg)){
-            roomSelect = arr[2];
+    /*
+        var leftsvg = document.getElementById('LeftGraphSVG');
+        leftsvg.oncontextmenu = function() {
+            return false;
         }
-        else{
-            roomSelect = 0;
-        }
-
-        if(!generate && roomSelect == 1){
-            //绘制点
-            clearHighLight();
-
-            var curRoom = "NULL";
-            var curIndex = -1;
-
-            arr,reg=new RegExp("(^| )RoomType=([^;]*)(;|$)");
-
+    
+        $('#LeftGraphSVG').on('mousedown',function(e){
+    
+            let selectX = e.clientX - leftsvg.getBoundingClientRect().left;
+            let selectY = e.clientY - leftsvg.getBoundingClientRect().top;
+    
+            var arr,reg=new RegExp("(^| )ifSelectRoom=([^;]*)(;|$)");
             if(arr=document.cookie.match(reg)){
-                curRoom = arr[2];
+                roomSelect = arr[2];
             }
-
-            arr,reg=new RegExp("(^| )CurNum=([^;]*)(;|$)");
-
-            if(arr=document.cookie.match(reg)){
-                curIndex = arr[2];
+            else{
+                roomSelect = 0;
             }
-            var curPoints = d3.select("body").select("#LeftGraphSVG").selectAll("circle");
+    
+            if(!generate && roomSelect == 1){
+                //绘制点
+                clearHighLight();
+    
+                var curRoom = "NULL";
+                var curIndex = -1;
+    
+                arr,reg=new RegExp("(^| )RoomType=([^;]*)(;|$)");
+    
+                if(arr=document.cookie.match(reg)){
+                    curRoom = arr[2];
+                }
+    
+                arr,reg=new RegExp("(^| )CurNum=([^;]*)(;|$)");
+    
+                if(arr=document.cookie.match(reg)){
+                    curIndex = arr[2];
+                }
+                var curPoints = d3.select("body").select("#LeftGraphSVG").selectAll("circle");
+    
+                var point = d3.select("body").select("#LeftGraphSVG").append("circle").attr("fill",roomcolor(curRoom)).attr("r",5)
+                    .attr("stroke","#000000").attr("stroke-width",2).attr("id","TransCircle"+curIndex+"_"+curRoom).on("mousedown",circle_mousedown)
+                    .on("mousemove",circle_mousemove).on("mouseup",circle_mouseup)
+                    .attr("cx",selectX/2).attr("cy",selectY/2).attr("class","TransCircle").append("title")//此处加入title标签
+                .text(curRoom);
+    
+    
+                roomSelect = false;
+                document.cookie = "ifSelectRoom=0";
+            }
+        })*/
 
-            var point = d3.select("body").select("#LeftGraphSVG").append("circle").attr("fill",roomcolor(curRoom)).attr("r",5)
-                .attr("stroke","#000000").attr("stroke-width",2).attr("id","TransCircle"+curIndex+"_"+curRoom).on("mousedown",circle_mousedown)
-                .on("mousemove",circle_mousemove).on("mouseup",circle_mouseup)
-				.attr("cx",selectX/2).attr("cy",selectY/2).attr("class","TransCircle").append("title")//此处加入title标签
-            .text(curRoom);
-
-
-            roomSelect = false;
-            document.cookie = "ifSelectRoom=0";
-        }
-    })*/
-
-    $('#RightSVG').on('mousedown',function(e){
-        console.log("Right!");
+    $('#ResultGraphSVG').on('mousedown', function (e) {
+        console.log("ResultGraph!");
     })
 
-    function clearHighLight(){
-        var points = d3.select("body").select("#LeftGraphSVG").selectAll("circle").attr("stroke-width",0);
+    function clearHighLight() {
+        var points = d3.select("body").select("#LeftGraphSVG").selectAll("circle").attr("stroke-width", 0);
     }
 
-    function circle_mousedown(){
+    function circle_mousedown() {
         mouseDown = true;
-        var points = d3.select("body").select("#LeftGraphSVG").selectAll("circle").attr("stroke-width",0);
-        var selectPoint = d3.select("body").select("#LeftGraphSVG").select("#"+this.id).attr("stroke-width",2);
+        var points = d3.select("body").select("#LeftGraphSVG").selectAll("circle").attr("stroke-width", 0);
+        var selectPoint = d3.select("body").select("#LeftGraphSVG").select("#" + this.id).attr("stroke-width", 2);
 
-        if(d3.event.button == 2){
+        if (d3.event.button == 2) {
             selectPoint.remove();
             mouseDown = false;
 
@@ -77,9 +77,9 @@ $(function () {
 
             var checkBtns = d3.select("body").selectAll(".checkButton");
 
-            checkBtns.each(function(d,i){
+            checkBtns.each(function (d, i) {
                 var btn_id = this.id.split("_")[1];
-                if(id == btn_id){
+                if (id == btn_id) {
                     var checkElement = this.parentElement.parentElement;
                     var todoList = document.getElementById('todo');
                     checkElement.classList.remove('checked');
@@ -90,16 +90,16 @@ $(function () {
         }
     }
 
-    function circle_mousemove(){
-        if(mouseDown){
+    function circle_mousemove() {
+        if (mouseDown) {
             let newX = d3.event.x - leftsvg.getBoundingClientRect().left;
             let newY = d3.event.y - leftsvg.getBoundingClientRect().top;
-            var selectPoint = d3.select("body").select("#LeftGraphSVG").select("#"+this.id)
-                .attr("cx",newX/2).attr("cy",newY/2);
+            var selectPoint = d3.select("body").select("#LeftGraphSVG").select("#" + this.id)
+                .attr("cx", newX / 2).attr("cy", newY / 2);
         }
     }
 
-    function circle_mouseup(){
+    function circle_mouseup() {
         mouseDown = false;
     }
 
@@ -110,7 +110,7 @@ $(function () {
             top: '100%',
             left: '0%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -100},
+            y: { 0: -100 },
             radius: 30,
             swirlSize: 5,
             swirlFrequency: 1,
@@ -123,7 +123,7 @@ $(function () {
             top: '100%',
             left: '0%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -85},
+            y: { 0: -85 },
             radius: 25,
             swirlSize: 5,
             swirlFrequency: 1,
@@ -136,7 +136,7 @@ $(function () {
             top: '100%',
             left: '0%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -70},
+            y: { 0: -70 },
             radius: 20,
             swirlSize: 5,
             swirlFrequency: 1,
@@ -150,7 +150,7 @@ $(function () {
             top: '100%',
             left: '0%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -100},
+            y: { 0: -100 },
             radius: 30,
             swirlSize: 30,
             swirlFrequency: 1,
@@ -163,7 +163,7 @@ $(function () {
             top: '100%',
             left: '0%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -85},
+            y: { 0: -85 },
             radius: 30,
             swirlSize: 30,
             swirlFrequency: 1,
@@ -176,7 +176,7 @@ $(function () {
             top: '100%',
             left: '0%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -70},
+            y: { 0: -70 },
             radius: 30,
             swirlSize: 30,
             swirlFrequency: 1,
@@ -192,7 +192,7 @@ $(function () {
             top: '100%',
             left: '100%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -100},
+            y: { 0: -100 },
             radius: 30,
             swirlSize: 5,
             swirlFrequency: 1,
@@ -205,7 +205,7 @@ $(function () {
             top: '100%',
             left: '100%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -85},
+            y: { 0: -85 },
             radius: 25,
             swirlSize: 5,
             swirlFrequency: 1,
@@ -218,7 +218,7 @@ $(function () {
             top: '100%',
             left: '100%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -70},
+            y: { 0: -70 },
             radius: 20,
             swirlSize: 5,
             swirlFrequency: 1,
@@ -232,7 +232,7 @@ $(function () {
             top: '100%',
             left: '100%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -100},
+            y: { 0: -100 },
             radius: 30,
             swirlSize: 30,
             swirlFrequency: 1,
@@ -245,7 +245,7 @@ $(function () {
             top: '100%',
             left: '100%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -85},
+            y: { 0: -85 },
             radius: 30,
             swirlSize: 30,
             swirlFrequency: 1,
@@ -258,7 +258,7 @@ $(function () {
             top: '100%',
             left: '100%',
             fill: 'rgba(255,255,255,1)',
-            y: {0: -70},
+            y: { 0: -70 },
             radius: 30,
             swirlSize: 30,
             swirlFrequency: 1,
