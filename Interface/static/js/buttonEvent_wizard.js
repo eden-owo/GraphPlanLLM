@@ -14,6 +14,9 @@ var RelRectvalue = [];
 // 存儲用戶上傳的邊界數據
 var userBoundaryExterior = null;
 var userBoundaryDoor = null;
+// 存儲選中的結果數據，用於 Step 2 -> Step 3 自動 Transfer
+var selectedRooms = null;
+var selectedRoomID = null;
 $(document).ready(function () {
     start();//执行函数
     isTrans = 0;
@@ -229,10 +232,24 @@ function ListBox(ret, rooms) {
             console.time('time');
             console.log(this.id.split("_")[1]);
             CreateRightImage(this.id.split("_")[1]);
-            // Classic mode: User clicks Transfer button manually
-            document.getElementById("transfer").onclick = function () {
-                CreateLeftGraph(rooms, Rightid);
-            }
+            // 同時在 PredictSVG 中繪製 Transfer 後的預測佈局（節點圖 + 用戶邊界）
+            CreatePredictTransfer(rooms, this.id.split("_")[1]);
+            var Rightid = this.id.split("_")[1];
+            // 存儲選中的數據，用於 Step 2 -> Step 3 自動 Transfer
+            selectedRooms = rooms;
+            selectedRoomID = Rightid;
+            // Auto-transfer since button is removed
+            d3.select('body').select('#LeftGraphSVG').selectAll('.TransLine').remove();
+            d3.select('body').select('#LeftGraphSVG').selectAll('.TransCircle').remove();
+            CreateLeftGraph(rooms, Rightid);
+            // d3.select("body").select("#LeftGraphSVG").select("#" + roomid).attr('scalesize',1);
+            var graphSearchEl = document.getElementById("graphSearch");
+            if (graphSearchEl) graphSearchEl.style = "display:none;cursor: default;color: #000;text-align: center;vertical-align: middle;line-height: 26px;position: absolute;margin-left: 160px;";
+            isTrans = 1;
+            var graphDivEl = document.getElementById("graphdiv");
+            if (graphDivEl) graphDivEl.style = "display:block;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 300px;";
+            var layoutDivEl = document.getElementById("layoutdiv");
+            if (layoutDivEl) layoutDivEl.style = "display:block;cursor: default;color: #000;width: 90px;border: 2px solid #0072ca;border-radius: 30px;text-align: center;vertical-align: middle;line-height: 26px;height: 30px;position: absolute;margin-left: 400px;";
             console.timeEnd('time')
         }
 
@@ -241,7 +258,7 @@ function ListBox(ret, rooms) {
         itemdiv.appendChild(itembt);
 
         var itemli = document.createElement('li');
-        itemli.classList.add('col-sm-12');
+        // 移除 col-sm-12，改由 CSS 完全控制大小
         itemli.appendChild(itemdiv);
         hsList.insertBefore(itemli, hsList.firstChild);
     }
@@ -672,7 +689,257 @@ function CreateRightImage(roomID) {
 
 }
 
+// 清空 PredictSVG 和 PredictLayoutSVG
+function PredictInit() {
+    d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
+    d3.select('body').select('#PredictSVG').selectAll('*').remove();
+}
 
+// 在 PredictSVG 中繪製節點圖（與 Output Graph 一樣的點和線）
+function CreatePredictLayout(roomID) {
+    // 清空 PredictSVG（節點圖）和 PredictLayoutSVG（房間布局）
+    d3.select('body').select('#PredictSVG').selectAll('*').remove();
+    d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
+
+    // 如果沒有用戶邊界數據，不繪製
+    if (!userBoundaryExterior || !userBoundaryDoor) {
+        console.log("No user boundary data available for PredictSVG");
+        return;
+    }
+
+    $.getJSON("/index/LoadTrainHouse/", { 'roomID': roomID }, function (ret) {
+        var border = 4;
+        var interiorwall_color = roomcolor("Interior wall");
+
+        // === PredictLayoutSVG: 繪製房間布局（與 RightLayoutSVG 一致）===
+        var roombx = ret["hsbox"];
+        for (var i = 0; i < roombx.length; i++) {
+            var rx = roombx[i][0][0];
+            var ry = roombx[i][0][1];
+            var rw = roombx[i][0][2] - roombx[i][0][0];
+            var rh = roombx[i][0][3] - roombx[i][0][1];
+            var color = roomcolor(roombx[i][1][0]);
+
+            d3.select("#PredictLayoutSVG")
+                .append("rect")
+                .attr("x", rx)
+                .attr("y", ry)
+                .attr("width", rw)
+                .attr("height", rh)
+                .attr("stroke-width", 3)
+                .attr("stroke", interiorwall_color)
+                .attr("fill", color)
+                .attr("id", "predict_layout_" + roombx[i][1][0]);
+        }
+
+        // 使用用戶的邊界作為 clip path
+        d3.select("#PredictLayoutSVG").append("clipPath")
+            .attr("id", "Predictclip-th")
+            .append("polygon")
+            .attr("points", userBoundaryExterior);
+        d3.select("#PredictLayoutSVG").attr("clip-path", "url(#Predictclip-th)");
+
+        // 繪製用戶的外牆邊界
+        d3.select("#PredictLayoutSVG")
+            .append("polygon")
+            .attr("points", userBoundaryExterior)
+            .attr("fill", "none")
+            .attr("stroke", roomcolor("Exterior wall"))
+            .attr("stroke-width", 6);
+
+        // 繪製用戶的大門
+        var door = userBoundaryDoor.split(",");
+        var fontdoor_color = roomcolor("Front door");
+        d3.select('#PredictLayoutSVG').append('line')
+            .attr("x1", door[0])
+            .attr("y1", door[1])
+            .attr("x2", door[2])
+            .attr("y2", door[3])
+            .attr("stroke", fontdoor_color)
+            .attr("stroke-width", 6);
+
+        // === PredictSVG: 繪製節點圖（與 RightSVG 一致）===
+        // 繪製圖形邊（線）
+        for (var i = 0; i < ret['hsedge'].length; i++) {
+            var roomA = ret['hsedge'][i][0];
+            var roomB = ret['hsedge'][i][1];
+
+            d3.select('body').select('#PredictSVG').append('line')
+                .attr("x1", ret['rmpos'][roomA][2])
+                .attr("y1", ret['rmpos'][roomA][3])
+                .attr("x2", ret['rmpos'][roomB][2])
+                .attr("y2", ret['rmpos'][roomB][3])
+                .attr("stroke", "#000000")
+                .attr("stroke-width", "2px")
+                .attr("id", "predict_edge_" + ret['rmpos'][roomA][1] + "-" + ret['rmpos'][roomB][1]);
+        }
+
+        // 繪製節點（圓）
+        for (var i = 0; i < ret['rmpos'].length; i++) {
+            d3.select('body').select('#PredictSVG').append('circle')
+                .attr("cx", ret['rmpos'][i][2])
+                .attr("cy", ret['rmpos'][i][3])
+                .attr("fill", roomcolor(ret['rmpos'][i][1]))
+                .attr("r", ret['rmsize'][i][0][0])
+                .attr("stroke", "#000000")
+                .attr("stroke-width", 2)
+                .attr("id", "predict_node_" + (i + 1) + "-" + ret['rmpos'][i][1]);
+        }
+    });
+
+
+}
+
+// 在 Step 2 點選 Results 時，將 transfer 結果繪製到 PredictSVG/PredictLayoutSVG
+function CreatePredictTransfer(rooms, roomID) {
+    // 清空 PredictSVG（節點圖）和 PredictLayoutSVG（房間布局）
+    d3.select('body').select('#PredictSVG').selectAll('*').remove();
+    d3.select('body').select('#PredictLayoutSVG').selectAll('*').remove();
+
+    // 如果沒有用戶邊界數據，不繪製
+    if (!userBoundaryExterior || !userBoundaryDoor) {
+        console.log("No user boundary data available for CreatePredictTransfer");
+        return;
+    }
+
+    $.getJSON("/index/TransGraph/", { 'userInfo': rooms.toString(), 'roomID': roomID }, function (ret) {
+        var border = 4;
+        var interiorwall_color = roomcolor("Interior wall");
+
+        // CreatePredictTransfer logic updated to use TransGraph result directly
+
+        // --- Drawing Logic from TransGraph Response ---
+        // 1. Draw Edges
+        d3.select('body').select('#PredictSVG').selectAll('*').remove();
+        for (var i = 0; i < ret['hsedge'].length; i++) {
+            var roomA = ret['hsedge'][i][0];
+            var roomB = ret['hsedge'][i][1];
+            var A_B = ret['hsedge'][i][2];
+
+            d3.select('body').select('#PredictSVG').append('line')
+                .attr("x1", ret['rmpos'][roomA][2])
+                .attr("y1", ret['rmpos'][roomA][3])
+                .attr("x2", ret['rmpos'][roomB][2])
+                .attr("y2", ret['rmpos'][roomB][3])
+                .attr("stroke", "#000000")
+                .attr("stroke-width", "2px")
+                .attr("id", "PredictLine_" + roomA + "_" + roomB + "_" + A_B)
+                .attr("class", "PredictTransLine");
+        }
+
+        // 2. Draw Nodes
+        for (var i = 0; i < ret['rmpos'].length; i++) {
+            var title = ret['rmpos'][i][1];
+            var circlecolor = roomcolor(title);
+
+            d3.select('body').select('#PredictSVG').append('circle')
+                .attr("cx", ret['rmpos'][i][2])
+                .attr("cy", ret['rmpos'][i][3])
+                .attr("fill", circlecolor)
+                .attr("r", ret['rmsize'][i][0][0])
+                .attr("stroke", "#000000")
+                .attr("stroke-width", 2)
+                .attr("id", "PredictCircle_" + i + "_" + title)
+                .attr("class", "PredictTransCircle")
+                .append("title")
+                .text(title);
+        }
+
+        // 3. Draw Layout (Rectangles) using ret['roomret'] which is now provided by TransGraph
+        var roombx = ret['roomret'];
+        d3.select('#PredictLayoutSVG').selectAll('*').remove();
+
+        if (roombx) {
+            for (var i = 0; i < roombx.length; i++) {
+                var rx = roombx[i][0][0];
+                var ry = roombx[i][0][1];
+                var rw = roombx[i][0][2] - roombx[i][0][0];
+                var rh = roombx[i][0][3] - roombx[i][0][1];
+                var color = roomcolor(roombx[i][1][0]);
+
+                d3.select("#PredictLayoutSVG").append("rect")
+                    .attr("x", rx)
+                    .attr("y", ry)
+                    .attr("width", rw)
+                    .attr("height", rh)
+                    .attr("stroke-width", border)
+                    .attr("stroke", interiorwall_color)
+                    .attr("fill", color)
+                    .attr("id", "Predict_" + roombx[i][1][0] + "_" + roombx[i][2])
+                    .append("title")
+                    .text(roombx[i][1][0]);
+            }
+        }
+
+        // 4. Draw Indoor Doors
+        var indoor = ret["indoor"];
+        if (indoor) {
+            for (var i = 0; i < indoor.length; i++) {
+                d3.select("#PredictLayoutSVG").append("rect")
+                    .attr("x", indoor[i][0])
+                    .attr("y", indoor[i][1])
+                    .attr("width", indoor[i][2])
+                    .attr("height", indoor[i][3])
+                    .attr("fill", roomcolor("Interior door"));
+            }
+        }
+
+        // 5. Draw Boundary (Clip and Polygon) - using userBoundaryExterior
+        d3.select("#PredictLayoutSVG").append("clipPath")
+            .attr("id", "Predictclip-th")
+            .append("polygon")
+            .attr("points", userBoundaryExterior);
+        d3.select("#PredictLayoutSVG").attr("clip-path", "url(#Predictclip-th)");
+
+        d3.select("#PredictLayoutSVG")
+            .append("polygon")
+            .attr("points", userBoundaryExterior)
+            .attr("fill", "none")
+            .attr("stroke", roomcolor("Exterior wall"))
+            .attr("stroke-width", border);
+
+        // 6. Draw Front Door
+        var door = userBoundaryDoor.split(",");
+        var fontdoor_color = roomcolor("Front door");
+        d3.select('#PredictLayoutSVG').append('line')
+            .attr("x1", parseInt(door[0]))
+            .attr("y1", door[1])
+            .attr("x2", door[2])
+            .attr("y2", door[3])
+            .attr("stroke", fontdoor_color)
+            .attr("stroke-width", border);
+
+        // 7. Draw Windows
+        var windows = ret["windows"];
+        var wincolor = d3.rgb(195, 195, 195);
+        if (windows) {
+            for (var i = 0; i < windows.length; i++) {
+                d3.select("#PredictLayoutSVG").append("rect")
+                    .attr("x", windows[i][0])
+                    .attr("y", windows[i][1])
+                    .attr("width", windows[i][2])
+                    .attr("height", windows[i][3])
+                    .attr("fill", "#ffffff")
+                    .attr("stroke", wincolor)
+                    .attr("stroke-width", 1);
+            }
+        }
+
+        var windowsline = ret["windowsline"];
+        if (windowsline) {
+            for (var i = 0; i < windowsline.length; i++) {
+                d3.select('#PredictLayoutSVG').append('line')
+                    .attr("x1", windowsline[i][0])
+                    .attr("y1", windowsline[i][1])
+                    .attr("x2", windowsline[i][2])
+                    .attr("y2", windowsline[i][3])
+                    .attr("stroke", wincolor)
+                    .attr("stroke-width", 1);
+            }
+        }
+
+    });
+}
 
 function GetEditGraph(ret) {
     var hsname = null;

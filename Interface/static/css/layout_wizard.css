@@ -132,12 +132,21 @@
 .step-content {
     flex: 1;
     padding: 25px;
-    overflow-y: auto;
     display: none;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .step-content.active {
-    display: block;
+    display: flex;
+}
+
+.step-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+    /* 為滾動條留出空間 */
 }
 
 .step-content-title {
@@ -298,9 +307,9 @@
     contain: paint;
 }
 
-/* Step 2 專用：較小的 graph-box */
+/* Step 2 專用：讓 graph-box 在 flex 之下自動填滿 */
 #step2 .graph-box {
-    height: calc(100vh - 650px);
+    height: 100%;
 }
 
 /* 為所有 graph-box 內的 SVG 容器建立裁剪邊界 */
@@ -365,21 +374,24 @@
     border-bottom: 1px solid #e0e0e0;
 }
 
-/* Results 項目圖片放大 */
+/* Results 項目卡片 - 超小型化方案 */
 #hsList li {
-    flex-shrink: 0;
-    width: 280px;
-    height: 320px;
+    flex: 0 0 200px !important;
+    width: 200px !important;
+    height: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    padding: 0 !important;
+    margin: 4px !important;
+    list-style: none !important;
 }
 
 #hsList .api-text {
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 #hsList .api-text:hover {
@@ -390,22 +402,25 @@
 #hsList button.api-title {
     background: #fff !important;
     border: 1px solid #ddd !important;
-    padding: 5px !important;
+    padding: 2px !important;
     cursor: pointer;
     width: 100% !important;
     height: 100% !important;
-    border-radius: 8px;
+    border-radius: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    /* 極小文字 */
 }
 
 #hsList img {
-    width: 250px !important;
-    height: 250px !important;
+    width: 200px !important;
+    /* 配合卡片大小 */
+    height: 200px !important;
     object-fit: contain;
     display: block;
-    /* 移除 transform 避免層次問題 */
 }
 
 /* 下一步按鈕 */

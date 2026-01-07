@@ -11,8 +11,8 @@
     <link href="../static/Page/css/bootstrap.min.css" rel="stylesheet">
     <link href="../static/select/element.min.css" rel="stylesheet">
     <link href="../static/select/style.css" rel="stylesheet">
-    <link href="../static/css/layout.css?v=2" rel="stylesheet">
     <link href="../static/css/index.css" rel="stylesheet">
+    <link href="../static/css/layout_wizard.css?v=101" rel="stylesheet">
 </head>
 
 <body onselectstart="return false">
@@ -67,165 +67,173 @@
                 <div class="step-content-title">Step 2: Filter & Search</div>
                 <div class="step-content-desc">設定篩選條件並搜尋格局</div>
 
-                <div style="display: flex; gap: 20px;">
-                    <!-- 左側：篩選條件 -->
-                    <div style="width: 320px; min-width: 320px;">
-                        <!-- Filter Conditions 區塊 -->
-                        <div class="card">
-                            <div class="card-title">📋 Filter Conditions</div>
+                <div class="step-scroll-area" style="overflow: hidden; display: flex;">
+                    <div style="display: flex; gap: 20px; width: 100%; flex: 1; min-height: 0;">
+                        <!-- 左側：篩選條件 (獨立捲動) -->
+                        <div style="width: 320px; min-width: 320px; overflow-y: auto; padding-right: 10px;">
+                            <!-- Filter Conditions 區塊 -->
+                            <div class="card">
+                                <div class="card-title">📋 Filter Conditions</div>
 
-                            <!-- BedRoom -->
-                            <div id="BedRoomVue" style="margin-bottom:15px;">
-                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                    <img src="../static/icon/BedRoom.png" width="18" height="18" alt="">
-                                    <span id="BedRoomlb" style="font-weight:500;">BedRoom</span>
+                                <!-- BedRoom -->
+                                <div id="BedRoomVue" style="margin-bottom:15px;">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                        <img src="../static/icon/BedRoom.png" width="18" height="18" alt="">
+                                        <span id="BedRoomlb" style="font-weight:500;">BedRoom</span>
+                                    </div>
+                                    <el-radio-group id="BedRoom" v-model="BedRoomradio1" size="small"
+                                        @change="BedRoomnum">
+                                        <el-radio-button label="Any"></el-radio-button>
+                                        <el-radio-button label="1+"></el-radio-button>
+                                        <el-radio-button label="2+"></el-radio-button>
+                                        <el-radio-button label="3+"></el-radio-button>
+                                        <el-radio-button label="4+"></el-radio-button>
+                                    </el-radio-group>
                                 </div>
-                                <el-radio-group id="BedRoom" v-model="BedRoomradio1" size="small" @change="BedRoomnum">
-                                    <el-radio-button label="Any"></el-radio-button>
-                                    <el-radio-button label="1+"></el-radio-button>
-                                    <el-radio-button label="2+"></el-radio-button>
-                                    <el-radio-button label="3+"></el-radio-button>
-                                    <el-radio-button label="4+"></el-radio-button>
-                                </el-radio-group>
+
+                                <!-- BathRoom -->
+                                <div id="BathRoomVue" style="margin-bottom:15px;">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                        <img src="../static/icon/BathRoom.png" width="18" height="18" alt="">
+                                        <span id="BathRoomlb" style="font-weight:500;">BathRoom</span>
+                                    </div>
+                                    <el-radio-group id="BathRoom" v-model="BathRoomradio1" size="small"
+                                        @change="BathRoomnum">
+                                        <el-radio-button label="Any"></el-radio-button>
+                                        <el-radio-button label="1+"></el-radio-button>
+                                        <el-radio-button label="2+"></el-radio-button>
+                                        <el-radio-button label="3+"></el-radio-button>
+                                    </el-radio-group>
+                                </div>
+
+                                <!-- Other Rooms -->
+                                <div id="otherVue" style="margin-bottom:15px;">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                        <img src="../static/icon/Other.png" width="18" height="18" alt="">
+                                        <span id="otherlb" style="font-weight:500;">Other Rooms</span>
+                                    </div>
+                                    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:13px;">
+                                        <div>
+                                            <span id="Kitchenlb">Kitchen:</span>
+                                            <el-radio-group id="Kitchen" v-model="Kitchenradio1" size="mini"
+                                                @change="Kitchennum">
+                                                <el-radio-button label="Any"></el-radio-button>
+                                                <el-radio-button label="1+"></el-radio-button>
+                                            </el-radio-group>
+                                        </div>
+                                        <div>
+                                            <span id="Balconylb">Balcony:</span>
+                                            <el-radio-group id="Balcony" v-model="Balconyradio1" size="mini"
+                                                @change="Balconynum">
+                                                <el-radio-button label="Any"></el-radio-button>
+                                                <el-radio-button label="1+"></el-radio-button>
+                                            </el-radio-group>
+                                        </div>
+                                        <div>
+                                            <span id="Storagelb">Storage:</span>
+                                            <el-radio-group id="Storage" v-model="Storageradio1" size="mini"
+                                                @change="Storagenum">
+                                                <el-radio-button label="Any"></el-radio-button>
+                                                <el-radio-button label="1+"></el-radio-button>
+                                            </el-radio-group>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Detail Rooms -->
+                                <div id="detailVue">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                        <img src="../static/icon/Detail.png" width="18" height="18" alt="">
+                                        <span id="detailedlb" style="font-weight:500;">Bedroom Details</span>
+                                    </div>
+                                    <div style="display:flex;gap:15px;font-size:13px;">
+                                        <div>
+                                            <span id="MasterRoomlb">Master:</span>
+                                            <el-radio-group id="MasterRoom" v-model="MasterRoomradio1" size="mini"
+                                                @change="MasterRoomnum">
+                                                <el-radio-button label="Any"></el-radio-button>
+                                                <el-radio-button label="1+"></el-radio-button>
+                                            </el-radio-group>
+                                        </div>
+                                        <div>
+                                            <span id="SecondRoomlb">Second:</span>
+                                            <el-radio-group id="SecondRoom" v-model="SecondRoomradio1" size="mini"
+                                                @change="SecondRoomnum">
+                                                <el-radio-button label="Any"></el-radio-button>
+                                                <el-radio-button label="1+"></el-radio-button>
+                                            </el-radio-group>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Number Search Button -->
+                                <button class="btn btn-primary btn-lg btn-block" id="generate"
+                                    onclick="wizardNumSearch()" style="width:100%;margin-top:15px;">
+                                    <img src="../static/icon/Search.png" width="20" height="20" alt="">
+                                    Number Search
+                                </button>
                             </div>
 
-                            <!-- BathRoom -->
-                            <div id="BathRoomVue" style="margin-bottom:15px;">
-                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                    <img src="../static/icon/BathRoom.png" width="18" height="18" alt="">
-                                    <span id="BathRoomlb" style="font-weight:500;">BathRoom</span>
+                            <!-- LLM Graph Generation 區塊 -->
+                            <div class="card" style="margin-top:10px;padding:12px;">
+                                <div class="card-title" style="margin-bottom:6px;font-size:14px;">🧠 LLM Graph
+                                    Generation
                                 </div>
-                                <el-radio-group id="BathRoom" v-model="BathRoomradio1" size="small"
-                                    @change="BathRoomnum">
-                                    <el-radio-button label="Any"></el-radio-button>
-                                    <el-radio-button label="1+"></el-radio-button>
-                                    <el-radio-button label="2+"></el-radio-button>
-                                    <el-radio-button label="3+"></el-radio-button>
-                                </el-radio-group>
-                            </div>
+                                <textarea id="llmGraphPrompt" placeholder="描述您想要的格局，例如：三房兩衛一廳，主臥連陽台..."
+                                    style="width:100%;height:160px;padding:8px;border:1px solid #ddd;border-radius:6px;resize:none;font-size:13px;line-height:1.4;box-sizing:border-box;"></textarea>
 
-                            <!-- Other Rooms -->
-                            <div id="otherVue" style="margin-bottom:15px;">
-                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                    <img src="../static/icon/Other.png" width="18" height="18" alt="">
-                                    <span id="otherlb" style="font-weight:500;">Other Rooms</span>
-                                </div>
-                                <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:13px;">
-                                    <div>
-                                        <span id="Kitchenlb">Kitchen:</span>
-                                        <el-radio-group id="Kitchen" v-model="Kitchenradio1" size="mini"
-                                            @change="Kitchennum">
-                                            <el-radio-button label="Any"></el-radio-button>
-                                            <el-radio-button label="1+"></el-radio-button>
-                                        </el-radio-group>
-                                    </div>
-                                    <div>
-                                        <span id="Balconylb">Balcony:</span>
-                                        <el-radio-group id="Balcony" v-model="Balconyradio1" size="mini"
-                                            @change="Balconynum">
-                                            <el-radio-button label="Any"></el-radio-button>
-                                            <el-radio-button label="1+"></el-radio-button>
-                                        </el-radio-group>
-                                    </div>
-                                    <div>
-                                        <span id="Storagelb">Storage:</span>
-                                        <el-radio-group id="Storage" v-model="Storageradio1" size="mini"
-                                            @change="Storagenum">
-                                            <el-radio-button label="Any"></el-radio-button>
-                                            <el-radio-button label="1+"></el-radio-button>
-                                        </el-radio-group>
-                                    </div>
-                                </div>
+                                <!-- LLM Graph Generate Button -->
+                                <button class="btn btn-primary btn-block" id="llmGraphBtn" onclick="wizardLLMGraph()"
+                                    style="width:100%;margin-top:8px;padding:8px 12px;font-size:14px;">
+                                    🧠 Generate Graph
+                                </button>
                             </div>
-
-                            <!-- Detail Rooms -->
-                            <div id="detailVue">
-                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                    <img src="../static/icon/Detail.png" width="18" height="18" alt="">
-                                    <span id="detailedlb" style="font-weight:500;">Bedroom Details</span>
-                                </div>
-                                <div style="display:flex;gap:15px;font-size:13px;">
-                                    <div>
-                                        <span id="MasterRoomlb">Master:</span>
-                                        <el-radio-group id="MasterRoom" v-model="MasterRoomradio1" size="mini"
-                                            @change="MasterRoomnum">
-                                            <el-radio-button label="Any"></el-radio-button>
-                                            <el-radio-button label="1+"></el-radio-button>
-                                        </el-radio-group>
-                                    </div>
-                                    <div>
-                                        <span id="SecondRoomlb">Second:</span>
-                                        <el-radio-group id="SecondRoom" v-model="SecondRoomradio1" size="mini"
-                                            @change="SecondRoomnum">
-                                            <el-radio-button label="Any"></el-radio-button>
-                                            <el-radio-button label="1+"></el-radio-button>
-                                        </el-radio-group>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Number Search Button -->
-                            <button class="btn btn-primary btn-lg btn-block" id="generate" onclick="wizardNumSearch()"
-                                style="width:100%;margin-top:15px;">
-                                <img src="../static/icon/Search.png" width="20" height="20" alt="">
-                                Number Search
-                            </button>
                         </div>
 
-                        <!-- LLM Graph Generation 區塊 -->
-                        <div class="card" style="margin-top:10px;padding:12px;">
-                            <div class="card-title" style="margin-bottom:6px;font-size:14px;">🧠 LLM Graph Generation
-                            </div>
-                            <textarea id="llmGraphPrompt" placeholder="描述您想要的格局，例如：三房兩衛一廳，主臥連陽台..."
-                                style="width:100%;height:160px;padding:8px;border:1px solid #ddd;border-radius:6px;resize:none;font-size:13px;line-height:1.4;box-sizing:border-box;"></textarea>
-
-                            <!-- LLM Graph Generate Button -->
-                            <button class="btn btn-primary btn-block" id="llmGraphBtn" onclick="wizardLLMGraph()"
-                                style="width:100%;margin-top:8px;padding:8px 12px;font-size:14px;">
-                                🧠 Generate Graph
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 右側區域 -->
-                    <div style="flex:1;min-width:0;overflow:hidden;">
-                        <!-- 上方：Results -->
-                        <div class="results-panel" id="listbox" style="width:100%;margin-bottom:20px;overflow:hidden;">
-                            <div class="results-title">Results</div>
-                            <ul id="hsList" class="todo-list"
-                                style="list-style:none;padding:10px;margin:0;display:flex;flex-wrap:nowrap;gap:10px;overflow-x:scroll;">
-                            </ul>
-                        </div>
-
-                        <!-- 下方：Output Graph + Predict Layout 並排 -->
-                        <div style="display:flex;gap:20px;">
-                            <!-- Output Graph -->
-                            <div class="graph-box" id="rightbox">
-                                <span class="graph-box-title">Output Graph</span>
-                                <div class="placeholder-text">請選擇上方搜尋結果</div>
-                                <svg id="RightLayoutSVG" width="220" height="220"
-                                    style="position:absolute;z-index:9;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
-                                <svg id="RightSVG" width="220" height="220"
-                                    style="position:absolute;z-index:999;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                        <!-- 右側區域 (共享高度，禁止滾動) -->
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:15px;overflow:hidden;">
+                            <!-- 上方：Results (縮小外框高度) -->
+                            <div class="results-panel" id="listbox"
+                                style="width:100%;overflow:hidden;flex:0 0 300px;display:flex;flex-direction:column;">
+                                <div class="results-title">Results</div>
+                                <ul id="hsList" class="todo-list"
+                                    style="list-style:none;padding:10px;margin:0;display:flex;flex-wrap:nowrap;gap:10px;overflow-x:scroll;flex:1;">
+                                </ul>
                             </div>
 
-                            <!-- Transfer Result -->
-                            <div class="graph-box" id="predictbox">
-                                <span class="graph-box-title">Transfer Result</span>
-                                <svg id="PredictLayoutSVG" width="220" height="220"
-                                    style="position:absolute;z-index:9;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
-                                <svg id="PredictSVG" width="220" height="220"
-                                    style="position:absolute;z-index:999;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                            <!-- 下方：Output Graph + Predict Layout 並排 (佔據剩餘空間) -->
+                            <div style="display:flex;gap:20px;flex:1;min-height:0;">
+                                <!-- Output Graph -->
+                                <div class="graph-box" id="rightbox" style="flex:1;height:100%;">
+                                    <span class="graph-box-title">Output Graph</span>
+                                    <div class="placeholder-text">請選擇上方搜尋結果</div>
+                                    <svg id="RightLayoutSVG" width="220" height="220"
+                                        style="position:absolute;z-index:9;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                                    <svg id="RightSVG" width="220" height="220"
+                                        style="position:absolute;z-index:999;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                                </div>
+
+                                <!-- Transfer Result -->
+                                <div class="graph-box" id="predictbox" style="flex:1;height:100%;">
+                                    <span class="graph-box-title">Transfer Result</span>
+                                    <svg id="PredictLayoutSVG" width="220" height="220"
+                                        style="position:absolute;z-index:9;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                                    <svg id="PredictSVG" width="220" height="220"
+                                        style="position:absolute;z-index:999;top:100px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                                </div>
+                            </div>
+
+                            <!-- 底部按鈕 (固定於右側最下方) -->
+                            <div class="next-step-btn" style="flex: 0 0 auto; text-align: right;">
+                                <button class="btn btn-secondary" onclick="completeStep(2)">
+                                    Continue to Edit & Generate →
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="next-step-btn" style="margin-top:20px;">
-                    <button class="btn btn-secondary" onclick="completeStep(2)">
-                        Continue to Edit & Generate →
-                    </button>
-                </div>
+
             </div>
 
             <!-- Step 3: Edit & Generate -->
@@ -233,39 +241,41 @@
                 <div class="step-content-title">Step 3: Edit & Generate</div>
                 <div class="step-content-desc">編輯節點、產生結果</div>
 
-                <!-- Add Node Bar -->
-                <div id="addVue" class="add-node-bar">
-                    <span style="font-weight:600;margin-right:10px;">Add Node:</span>
-                    <div class="add-node-item" id="LivingRoom_a" onclick="addLivingRoom(this.id)">
-                        <div class="node-dot" style="background:#c8c8c8;"></div><span>LivingRoom</span>
+                <div class="step-scroll-area">
+                    <!-- Add Node Bar -->
+                    <div id="addVue" class="add-node-bar">
+                        <span style="font-weight:600;margin-right:10px;">Add Node:</span>
+                        <div class="add-node-item" id="LivingRoom_a" onclick="addLivingRoom(this.id)">
+                            <div class="node-dot" style="background:#c8c8c8;"></div><span>LivingRoom</span>
+                        </div>
+                        <div class="add-node-item" id="BedRoom_a" onclick="addLivingRoom(this.id)">
+                            <div class="node-dot" style="background:#fff39a;"></div><span>Bedroom</span>
+                        </div>
+                        <div class="add-node-item" id="Bathroom_a" onclick="addLivingRoom(this.id)">
+                            <div class="node-dot" style="background:#bfecff;"></div><span>Bathroom</span>
+                        </div>
+                        <div class="add-node-item" id="Balcony_a" onclick="addLivingRoom(this.id)">
+                            <div class="node-dot" style="background:#d3d981;"></div><span>Balcony</span>
+                        </div>
+                        <div class="add-node-item" id="Kitchen_a" onclick="addLivingRoom(this.id)">
+                            <div class="node-dot" style="background:#f4d7d1;"></div><span>Kitchen</span>
+                        </div>
+                        <div class="add-node-item" id="Storage_a" onclick="addLivingRoom(this.id)">
+                            <div class="node-dot" style="background:#ffdfb6;"></div><span>Storage</span>
+                        </div>
                     </div>
-                    <div class="add-node-item" id="BedRoom_a" onclick="addLivingRoom(this.id)">
-                        <div class="node-dot" style="background:#fff39a;"></div><span>Bedroom</span>
-                    </div>
-                    <div class="add-node-item" id="Bathroom_a" onclick="addLivingRoom(this.id)">
-                        <div class="node-dot" style="background:#bfecff;"></div><span>Bathroom</span>
-                    </div>
-                    <div class="add-node-item" id="Balcony_a" onclick="addLivingRoom(this.id)">
-                        <div class="node-dot" style="background:#d3d981;"></div><span>Balcony</span>
-                    </div>
-                    <div class="add-node-item" id="Kitchen_a" onclick="addLivingRoom(this.id)">
-                        <div class="node-dot" style="background:#f4d7d1;"></div><span>Kitchen</span>
-                    </div>
-                    <div class="add-node-item" id="Storage_a" onclick="addLivingRoom(this.id)">
-                        <div class="node-dot" style="background:#ffdfb6;"></div><span>Storage</span>
-                    </div>
-                </div>
 
-                <div class="graph-area">
-                    <!-- 左側圖形 -->
-                    <div class="graph-box" id="leftbox">
-                        <span class="graph-box-title">Input Graph</span>
-                        <svg id="LeftBaseSVG" width="256" height="256"
-                            style="background:#fff !important;position:absolute;z-index:1;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
-                        <svg id="LeftLayoutSVG" width="256" height="256"
-                            style="position:absolute;z-index:9;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
-                        <svg id="LeftGraphSVG" width="256" height="256"
-                            style="position:absolute;z-index:999;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                    <div class="graph-area">
+                        <!-- 左側圖形 -->
+                        <div class="graph-box" id="leftbox">
+                            <span class="graph-box-title">Input Graph</span>
+                            <svg id="LeftBaseSVG" width="256" height="256"
+                                style="background:#fff !important;position:absolute;z-index:1;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                            <svg id="LeftLayoutSVG" width="256" height="256"
+                                style="position:absolute;z-index:9;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                            <svg id="LeftGraphSVG" width="256" height="256"
+                                style="position:absolute;z-index:999;top:60px;left:50%;transform:translateX(-50%);transform-origin:top center;"></svg>
+                        </div>
                     </div>
                 </div>
 
@@ -331,11 +341,11 @@
         };
     </script>
     <script src="../static/js/load.js"></script>
-    <script src="../static/js/buttonEvent.js?v=4"></script>
     <script src="../static/Page/js/bootstrap.min.js"></script>
+    <script src="../static/js/buttonEvent_wizard.js?v=4"></script>
     <script src="../static/js/mo.min.js"></script>
     <script src="../static/js/btnEvent.js"></script>
-    <script src="../static/js/wizard.js"></script>
+    <script src="../static/js/wizard_wizard.js"></script>
 
 </body>
 
