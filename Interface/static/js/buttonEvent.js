@@ -229,6 +229,7 @@ function ListBox(ret, rooms) {
             console.time('time');
             console.log(this.id.split("_")[1]);
             CreateRightImage(this.id.split("_")[1]);
+            var Rightid = this.id.split("_")[1];
             // Classic mode: User clicks Transfer button manually
             document.getElementById("transfer").onclick = function () {
                 CreateLeftGraph(rooms, Rightid);
