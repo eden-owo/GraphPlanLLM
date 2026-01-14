@@ -179,10 +179,10 @@ function wizardLoadExample() {
                     .attr("stroke", roomcolor("Front door"))
                     .attr("stroke-width", border);
 
-                d3.select('body').select('#LeftBaseSVG').style("transform", "translateX(-50%) scale(1.5)");
-                d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(1.5)");
-                d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
-                d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(1.5)");
+                d3.select('body').select('#LeftBaseSVG').style("transform", "translateX(-50%) scale(2)");
+                d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(2)");
+                d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(2)");
+                d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(2)");
 
                 // 執行 NumSearch
                 NumSearch();
@@ -351,7 +351,7 @@ function drawLLMGraph(ret) {
             .text(ret.rmpos[i][1]);
     }
 
-    d3.select('body').select('#RightSVG').style("transform", "translateX(-50%) scale(1.5)");
+    d3.select('body').select('#RightSVG').style("transform", "translateX(-50%) scale(2)");
 
     // 繪製邊界到 RightLayoutSVG
     d3.select("#RightLayoutSVG")
@@ -371,7 +371,7 @@ function drawLLMGraph(ret) {
         .attr("stroke", roomcolor("Front door"))
         .attr("stroke-width", border);
 
-    d3.select('body').select('#RightLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
+    d3.select('body').select('#RightLayoutSVG').style("transform", "translateX(-50%) scale(2)");
 }
 
 /**
@@ -487,8 +487,8 @@ function drawLLMGraphPredict(ret) {
             .text(ret.rmpos[i][1]);
     }
 
-    d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
-    d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(1.5)");
+    d3.select('body').select('#PredictLayoutSVG').style("transform", "translateX(-50%) scale(2)");
+    d3.select('body').select('#PredictSVG').style("transform", "translateX(-50%) scale(2)");
 }
 
 
@@ -624,8 +624,8 @@ function copyLLMToLeftGraph(ret) {
     d3.select("#LeftLayoutSVG").attr("clip-path", "url(#llm-clip-th)");
 
     // 設置 transform (與 CreateLeftPlan 一致)
-    d3.select('body').select('#LeftLayoutSVG').style("transform", "translateX(-50%) scale(1.5)");
-    d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(1.5)");
+    d3.select('body').select('#LeftLayoutSVG').style("transform", "translateX(-50%) scale(2)");
+    d3.select('body').select('#LeftGraphSVG').style("transform", "translateX(-50%) scale(2)");
 
     // 設置房間數量 cookie
     document.cookie = "RoomNum=" + ret.rmpos.length;
