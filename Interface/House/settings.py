@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,12 +24,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '[SCRUBBED_SECRET_KEY]'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 
 # Application definition
@@ -124,9 +128,8 @@ HERE = os.path.join(HERE, '../')
 STATICFILES_DIRS = (
     os.path.join(HERE, 'static/'),
 )
-ALLOWED_HOSTS = ['[SCRUBBED_DOMAIN]', 'www.[SCRUBBED_DOMAIN]', 'localhost']
+# Merging original hosts with any additional logic if needed
+# The ALLOWED_HOSTS at the bottom of the file was redundant or specific to a deployment
+# We will consolidate this.
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://[SCRUBBED_DOMAIN]',
-    'https://www.[SCRUBBED_DOMAIN]',
-]
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')

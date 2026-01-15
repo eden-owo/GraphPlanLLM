@@ -58,14 +58,6 @@ def home(request):
     return render(request, "home_wizard.html", )
 
 
-def home_classic(request):
-    """Classic single-page interface (home.html)"""
-    return render(request, "home.html", )
-
-def home_example(request):
-    """Example page interface with pre-loaded examples (home_example.html)"""
-    return render(request, "home_example.html", )
-
 
 def home_wizard_upload(request):
     """Wizard interface with upload capability (home_wizard_upload.html)"""

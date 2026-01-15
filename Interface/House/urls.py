@@ -31,10 +31,10 @@ urlpatterns = [
     path(r'index/RelBox/', views.RelBox),
     path(r'index/Save_Editbox/', views.Save_Editbox),
 
-    path('home', views.home_classic),  # Classic 單頁式介面 (預設)
-    path('home_wizard', views.home) ,  # Wizard 步驟式介面
-    path('home_wizard_upload', views.home_wizard_upload),  # Upload enabled wizard (New)
-    path('home_example', views.home_example),  # Example 範例展示介面
+    path('', views.home),  # 預設首頁改為 Wizard 介面
+    path('home', views.home),  # /home 指向 Wizard
+    path('home_wizard', views.home),  # /home_wizard 也指向 Wizard
+    path('home_wizard_upload', views.home_wizard_upload),  
     path('index/GetExampleList/', views.GetExampleList),  # 取得範例列表
     path('index/LLMGenerateGraph/', views.LLMGenerateGraph),  # LLM Graph 生成
     path('index/LLMRegenerateLayout/', views.LLMRegenerateLayout),  # LLM 重新生成佈局
