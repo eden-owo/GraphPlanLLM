@@ -88,6 +88,10 @@ python test_interface_data.py
 
 ---
 
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. See the [LICENSE](LICENSE) file for details.
+
 ## Acknowledgement
 * sg2im: https://github.com/google/sg2im
 * scene generation: https://github.com/ashual/scene_generation
