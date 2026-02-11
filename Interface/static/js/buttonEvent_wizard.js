@@ -196,6 +196,103 @@ function RightInit() {
     d3.select('body').select('#PredictSVG').selectAll('*').remove();
 }
 
+function DrawThumbnail(roomID, svgID) {
+    $.getJSON("/index/LoadTrainHouse/", { 'roomID': roomID }, function (ret) {
+        var svg = d3.select("#" + svgID);
+        var border = 2; // Thumbnail border width
+        var interiorwall_color = roomcolor("Interior wall");
+
+        var all_x = [];
+        var all_y = [];
+
+        // Parse exterior points
+        var hsex = ret["exterior"];
+        var points = hsex.trim().split(" ");
+        points.forEach(function (p) {
+            if (p) {
+                var coords = p.split(",");
+                all_x.push(parseFloat(coords[0]));
+                all_y.push(parseFloat(coords[1]));
+            }
+        });
+
+        // Parse room boxes to include in bounds calculation
+        var roombx = ret["hsbox"];
+        for (var i = 0; i < roombx.length; i++) {
+            var rx = roombx[i][0][0];
+            var ry = roombx[i][0][1];
+            var rx2 = roombx[i][0][2];
+            var ry2 = roombx[i][0][3];
+            all_x.push(rx);
+            all_x.push(rx2);
+            all_y.push(ry);
+            all_y.push(ry2);
+        }
+
+        // Calculate viewBox based on ALL elements
+        if (all_x.length > 0) {
+            var min_x = Math.min(...all_x);
+            var max_x = Math.max(...all_x);
+            var min_y = Math.min(...all_y);
+            var max_y = Math.max(...all_y);
+            var width = max_x - min_x;
+            var height = max_y - min_y;
+            // Add padding
+            var padding = 20;
+            svg.attr("viewBox", (min_x - padding) + " " + (min_y - padding) + " " + (width + padding * 2) + " " + (height + padding * 2));
+        }
+
+        // Create Clip Path using exterior polygon
+        var defs = svg.append("defs");
+        var clipId = "clip-th-" + roomID + "-" + Math.floor(Math.random() * 10000); // Unique clip ID with random suffix
+
+        defs.append("clipPath")
+            .attr("id", clipId)
+            .append("polygon")
+            .attr("points", hsex);
+
+        // Group for ALL elements to apply clip-path (matching CreateRightImage logic)
+        var rootGroup = svg.append("g")
+            .attr("clip-path", "url(#" + clipId + ")");
+
+        // Layout room (draw inside the clipped group)
+        for (var i = 0; i < roombx.length; i++) {
+            var rx = roombx[i][0][0];
+            var ry = roombx[i][0][1];
+            var rw = roombx[i][0][2] - roombx[i][0][0];
+            var rh = roombx[i][0][3] - roombx[i][0][1];
+            var color = roomcolor(roombx[i][1][0]);
+
+            rootGroup.append("rect")
+                .attr("x", rx)
+                .attr("y", ry)
+                .attr("width", rw)
+                .attr("height", rh)
+                .attr("stroke-width", 1)
+                .attr("stroke", interiorwall_color)
+                .attr("fill", color);
+        }
+
+        // Layout Boundary (also inside the clipped group)
+        rootGroup.append("polygon")
+            .attr("points", hsex)
+            .attr("fill", "none")
+            .attr("stroke", roomcolor("Exterior wall"))
+            .attr("stroke-width", border);
+
+        // Door (also inside the clipped group)
+        var door = ret['door'].split(",");
+        var fontdoor_color = roomcolor("Front door");
+        rootGroup.append('line')
+            .attr("x1", door[0])
+            .attr("y1", door[1])
+            .attr("x2", door[2])
+            .attr("y2", door[3])
+            .attr("stroke", fontdoor_color)
+            .attr("stroke-width", border);
+    });
+}
+
 function ListBox(ret, rooms) {
     var roomList = ret;
     console.log("roomList" + roomList);
@@ -208,13 +305,26 @@ function ListBox(ret, rooms) {
         var itembt = document.createElement('button');
         itembt.innerHTML = ret[i].split(".")[0];
         itembt.classList.add('api-title');
-        itembt.classList.add('pngls');
+        // itembt.classList.add('pngls'); // Removed pngls class as we are using SVG
         itembt.id = "Btn_" + ret[i];
-        var itemimg = document.createElement('img');
-        // itemimg.src="../static/Data/Img/52.png";
-        //             itemimg.src="../static/Data/snapshot/"+ret[i];
-        itemimg.src = "../static/Data/snapshot_train/" + ret[i];
-        itembt.appendChild(itemimg);
+
+        // Replace img with svg
+        // var itemimg = document.createElement('img');
+        // itemimg.src = "../static/Data/snapshot_train/" + ret[i];
+        // itembt.appendChild(itemimg);
+
+        var svgID = "ThumbSVG_" + ret[i].split(".")[0];
+        var itemSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        itemSvg.setAttribute("id", svgID);
+        itemSvg.setAttribute("width", "100%");
+        itemSvg.setAttribute("height", "150px"); // Set a fixed height for the thumbnail
+        itemSvg.style.display = "block";
+        itemSvg.style.margin = "0 auto";
+        itembt.appendChild(itemSvg);
+
+        // Asynchronously draw the thumbnail
+        DrawThumbnail(ret[i].split(".")[0], svgID);
+
         itembt.onclick = function () {
             RightInit();
             // 隱藏 placeholder
